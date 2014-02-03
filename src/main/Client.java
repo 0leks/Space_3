@@ -59,7 +59,8 @@ public class Client implements Runnable{
 		JTextField usernamebox;
 		JTextField redbox, greenbox, bluebox;
 		Timer tim;
-		private JTextArea serverinfo;
+		public JTextArea serverplayers;
+		public JTextArea serverdata;
 		public ConnectFrame() {
 			this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			this.setSize(500, 500);
@@ -83,11 +84,16 @@ public class Client implements Runnable{
 				}
 			};
 			panel.setLayout(null);
-			serverinfo = new JTextArea();
-			serverinfo.setSize(400, 200);
-			serverinfo.setLocation(20, 170);
-			serverinfo.setBorder(BorderFactory.createLineBorder(Color.black));
-			panel.add(serverinfo);
+			serverplayers = new JTextArea();
+			serverplayers.setSize(200, 200);
+			serverplayers.setLocation(20, 170);
+			serverplayers.setBorder(BorderFactory.createLineBorder(Color.black));
+			panel.add(serverplayers);
+			serverdata = new JTextArea();
+			serverdata.setSize(200, 200);
+			serverdata.setLocation(230, 170);
+			serverdata.setBorder(BorderFactory.createLineBorder(Color.black));
+			panel.add(serverdata);
 			ipaddress = new JTextField("localhost");
 			ipaddress.setSize(250, 30);
 			ipaddress.setLocation(20, 30);
@@ -217,10 +223,10 @@ public class Client implements Runnable{
 			repaint();
 		}
 		public void addText(String s) {
-			serverinfo.setText(serverinfo.getText()+s);
+			serverplayers.setText(serverplayers.getText()+s);
 		}
 		public void setText(String s) {
-			serverinfo.setText(s);
+			serverplayers.setText(s);
 		}
 	}
 	public String trimString(String s) {
@@ -279,21 +285,21 @@ public class Client implements Runnable{
 		try {
 			hostout.writeUnshared(o);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	public void read() {
 		while(true) {
 			try {
-				Object read = hostin.readUnshared();//.readObject();
+				Object read = hostin.readUnshared();
 				if(read instanceof PlayerConfirm) {
 					String str = ((PlayerConfirm)read).msg;
 					message2 = str;
 				}
 				if(read instanceof ServerData) {
 					currentserverdata = (ServerData)read;
-					connectframe.serverinfo.setText(currentserverdata.players);
+					connectframe.serverplayers.setText(currentserverdata.players);
+					connectframe.serverdata.setText(currentserverdata.getServerData());
 				}
 			} catch (ClassNotFoundException e) {
 				connectframe.addText(e.getMessage()+" ("+ip+":"+port+")\n");

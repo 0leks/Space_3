@@ -16,13 +16,17 @@ public class World {
 		players.add(p);
 	}
 	public void setSize(int size) {
+		radius = getRadius(size);
+	}
+	public static int getRadius(int size) {
 		if(size==SMALL) {
-			radius = 500;
+			return 500;
 		} else if(size == MEDIUM) {
-			radius = 1000;
+			return 1000;
 		} else if(size == LARGE) {
-			radius = 1500;
+			return 1500;
 		}
+		return 0;
 	}
 	public String toString() {
 		String s = "World( radius="+radius+" players="+players.size();

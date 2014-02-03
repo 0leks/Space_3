@@ -36,7 +36,6 @@ public class Server implements Runnable {
 	ArrayList<Connection> connections;
 	Timer servertimer;
 	ServerData serverdata;
-	int currentworldWidth;
 	World world;
 	public int selectedworldsize;
 	public Server() {
@@ -48,7 +47,7 @@ public class Server implements Runnable {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				serverdata.players = worldframe.players.getText();
-				serverdata.width = currentworldWidth;
+				serverdata.radius = World.getRadius(selectedworldsize);
 				for(Connection c : connections) {
 					c.send(serverdata);
 				}
@@ -142,6 +141,7 @@ public class Server implements Runnable {
 			title = "Server at ";
 			try {
 				title += InetAddress.getLocalHost().getHostAddress()+":";
+				serverdata.ip = InetAddress.getLocalHost().getHostAddress()+":"+portNumber;
 			} catch (UnknownHostException e1) {
 				e1.printStackTrace();
 			}
