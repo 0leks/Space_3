@@ -37,7 +37,10 @@ public class Server implements Runnable {
 	Timer servertimer;
 	ServerData serverdata;
 	int currentworldWidth;
+	World world;
+	public int selectedworldsize;
 	public Server() {
+		selectedworldsize = 1;
 		thread = new Thread(this);
 		creationframe = new CreationFrame();
 		connections = new ArrayList<Connection>();
@@ -107,23 +110,24 @@ public class Server implements Runnable {
 				Connection con = new Connection(this, hostin, hostout);
 				connections.add(con);
 				con.start();
-//				if(world.canJoin()) {
-//					world.addConnection(new Connection(world, hostin, hostout));
-//				} else {
-//					hostout.writeInt(10012);
-//					hostout.writeInt(1);
-//					hostin.close();
-//					hostout.close();
-//				}
 			}
 		} catch (IOException e) {
 			System.out.println("Error Creating Server");
 			e.printStackTrace();
 		}
 	}
+	public void createWorld() {
+		world = new World(getWorldSize());
+		for(int a=0; a<connections.size(); a++) {
+			world.addPlayer(connections.get(a).player);
+		}
+		System.out.println(world.toString());
+	}
+	public int getWorldSize() {
+		return this.selectedworldsize;
+	}
 	public class WorldFrame extends JFrame {
 		JTextArea players;
-//		JTextField width;
 		JPanel panel;
 		JButton create;
 		Timer tim;
@@ -135,11 +139,10 @@ public class Server implements Runnable {
 		public WorldFrame() {
 			this.setSize(500, 500);
 			this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			title = "Server ";
+			title = "Server at ";
 			try {
 				title += InetAddress.getLocalHost().getHostAddress()+":";
 			} catch (UnknownHostException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 			title += portNumber;
@@ -149,10 +152,6 @@ public class Server implements Runnable {
 			players.setFont(new Font("Nyala", Font.PLAIN, 20));
 			players.setSize(400, 200);
 			players.setLocation(50, 50);
-//			width = new JTextField("3000");
-//			currentworldWidth = 3000;
-//			width.setSize(190, 20);
-//			width.setLocation(50, 280);
 			panel = new JPanel() {
 				@Override
 				public void paintComponent(Graphics g) {
@@ -166,18 +165,22 @@ public class Server implements Runnable {
 			};
 			int x = 150;
 			int y = 257;
+			SizeListener sl = new SizeListener();
 			small = new JRadioButton("Small");
 			small.setSelected(true);
 			small.setSize(70, 20);
 			small.setLocation(x, y);
+			small.addActionListener(sl);
 			medium = new JRadioButton("Medium");
 			medium.setSelected(true);
 			medium.setSize(70, 20);
 			medium.setLocation(x+70, y);
+			medium.addActionListener(sl);
 			large = new JRadioButton("Large");
 			large.setSelected(true);
 			large.setSize(70, 20);
 			large.setLocation(x+140, y);
+			large.addActionListener(sl);
 			size = new ButtonGroup();
 			size.add(small);
 			size.add(medium);
@@ -188,7 +191,13 @@ public class Server implements Runnable {
 			
 			create = new JButton("START GAME");
 			create.setSize(190, 40);
-			create.setLocation(50, 350);
+			create.setLocation(50, 400);
+			create.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					createWorld();
+				}
+			});
 			this.add(panel, BorderLayout.CENTER);
 			panel.setLayout(null);
 			panel.add(players);
@@ -206,16 +215,7 @@ public class Server implements Runnable {
 							text+="null\n";
 						}
 					}
-//					if(!players.getText().equals(text)) {
-//						playerschanged = true;
-//					}
 					players.setText(text);
-					try {
-//						int temp = Integer.parseInt(width.getText());
-//						currentworldWidth = temp;
-					} catch(Exception e) {
-						
-					}
 					repaint();
 				}
 				
@@ -223,8 +223,17 @@ public class Server implements Runnable {
 			tim.start();
 			this.setVisible(true);
 		}
-		public void refreshText() {
-			
+		public class SizeListener implements ActionListener {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(e.getSource()==small) {
+					selectedworldsize = World.SMALL;
+				} else if(e.getSource()==medium) {
+					selectedworldsize = World.MEDIUM;
+				} else if(e.getSource()==large) {
+					selectedworldsize = World.LARGE;
+				}
+			}
 		}
 	}
 	public class CreationFrame extends JFrame {
