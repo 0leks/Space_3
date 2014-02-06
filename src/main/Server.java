@@ -55,6 +55,11 @@ public class Server implements Runnable {
 		});
 		serverdata = new ServerData();
 	}
+	public void sendToAll(Object o) {
+		for(int a=0; a<connections.size(); a++) {
+			connections.get(a).send(o);
+		}
+	}
 	public static void main(String[] args) {
 		Server s = new Server();
 	}
@@ -116,11 +121,16 @@ public class Server implements Runnable {
 		}
 	}
 	public void createWorld() {
-		world = new World(getWorldSize());
+		world = new World(getWorldSize(), this);
 		for(int a=0; a<connections.size(); a++) {
 			world.addPlayer(connections.get(a).player);
 		}
+		world.initializeBases();
 		System.out.println(world.toString());
+	}
+	public void startGame() {
+		serverdata.gamestarted = true;
+		world.startGame();
 	}
 	public int getWorldSize() {
 		return this.selectedworldsize;
@@ -129,6 +139,7 @@ public class Server implements Runnable {
 		JTextArea players;
 		JPanel panel;
 		JButton create;
+		JButton start;
 		Timer tim;
 		String title;
 		JRadioButton small;
@@ -188,21 +199,35 @@ public class Server implements Runnable {
 			this.add(small);
 			this.add(medium);
 			this.add(large);
+
+			start = new JButton("START GAME");
+			start.setSize(190, 40);
+			start.setLocation(50, 400);
+			start.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					startGame();
+					start.setVisible(false);
+					worldframe.remove(start);
+				}
+			});
 			
-			create = new JButton("START GAME");
+			create = new JButton("CREATE WORLD");
 			create.setSize(190, 40);
 			create.setLocation(50, 400);
 			create.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
 					createWorld();
+					create.setVisible(false);
+					start.setVisible(true);
 				}
 			});
 			this.add(panel, BorderLayout.CENTER);
 			panel.setLayout(null);
 			panel.add(players);
-//			panel.add(width);
 			panel.add(create);
+			panel.add(start);
 			tim = new Timer(100, new ActionListener() {
 
 				@Override
@@ -226,12 +251,14 @@ public class Server implements Runnable {
 		public class SizeListener implements ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(e.getSource()==small) {
-					selectedworldsize = World.SMALL;
-				} else if(e.getSource()==medium) {
-					selectedworldsize = World.MEDIUM;
-				} else if(e.getSource()==large) {
-					selectedworldsize = World.LARGE;
+				if(!serverdata.gamestarted) {
+					if(e.getSource()==small) {
+						selectedworldsize = World.SMALL;
+					} else if(e.getSource()==medium) {
+						selectedworldsize = World.MEDIUM;
+					} else if(e.getSource()==large) {
+						selectedworldsize = World.LARGE;
+					}
 				}
 			}
 		}

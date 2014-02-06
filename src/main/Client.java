@@ -2,16 +2,20 @@ package main;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -22,6 +26,7 @@ import javax.swing.JTextField;
 import javax.swing.Timer;
 import javax.swing.border.Border;
 
+import data.GameData;
 import data.PlayerConfirm;
 import data.ServerData;
 
@@ -39,17 +44,146 @@ public class Client implements Runnable{
 	boolean colorconfirmed;
 	ServerData currentserverdata;
 	ConnectFrame connectframe;
+	GameFrame gameframe;
 	public boolean startclient;
+	private ArrayList<Base> bases;
 	public Client() {
+		bases = new ArrayList<Base>();
 		thisplayer = new Player();
 		message = "asdf";
 		message2 = "";
 	    this.mythread = new Thread(this);
 	    connectframe = new ConnectFrame();
+	    gameframe = new GameFrame();
 	}
 	public static void main(String[] args) {
 		Client c = new Client();
 		c.mythread.start();
+	}
+	
+	public String trimString(String s) {
+		char[] chars = s.toCharArray();
+		String toret = "";
+		for(int a=0; a<chars.length; a++) {
+			if(chars[a]>=48 && chars[a]<=57) {
+				toret += ""+chars[a];
+			}
+		}
+		return toret;
+	}
+	@Override
+	public void run() {
+		while(true) {
+			if(startclient) {
+				startclient = false;
+				InetAddress hostIP = null;
+				try {
+					connectframe.addText("Converting ip adress:"+ip+"\n");
+					hostIP = InetAddress.getByName(ip);
+					connectframe.addText("  -Done converting, result is:"+hostIP+"\n");
+					if (hostIP == null) {
+						connectframe.addText("ip invalid, returning\n");
+						return;
+					}
+					connectframe.addText("Creating socket on "+ip+":"+port+"\n");
+					socket = new Socket(hostIP, port);
+					connectframe.addText("Creating ObjectOutputStream\n");
+					hostout = new ObjectOutputStream(socket.getOutputStream());
+					connectframe.addText("Flushing ObjectOutputStream\n");
+					hostout.flush();
+					connectframe.addText("Creating ObjectInputStream\n");
+					hostin = new ObjectInputStream(socket.getInputStream());
+					System.out.println("Sending :"+thisplayer);
+					send(thisplayer);
+					connectframe.start.setText("Update");
+					connectframe.setTitle(connectframe.getTitle()+" connected to ("+ip+":"+port+")");
+					read();
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+					connectframe.addText(e.getMessage()+" ("+ip+":"+port+")");
+				} catch (IOException e) {
+					e.printStackTrace();
+					connectframe.addText(e.getMessage()+" ("+ip+":"+port+")");
+				}
+			}
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	public void send(Object o) {
+		try {
+			hostout.writeUnshared(o);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	public void changeFrame() {
+		connectframe.setVisible(false);
+		gameframe.setVisible(true);
+	}
+	public void read() {
+		while(true) {
+			try {
+				Object read = hostin.readUnshared();
+				if(read instanceof PlayerConfirm) {
+					String str = ((PlayerConfirm)read).msg;
+					message2 = str;
+				}
+				if(read instanceof ServerData) {
+					if(currentserverdata!=null) {
+						ServerData serverdata = (ServerData)read;
+						if(currentserverdata.gamestarted) {
+							
+						} else {
+							if(serverdata.gamestarted) {
+								changeFrame();
+							}
+						}
+					}
+					currentserverdata = (ServerData)read;
+					connectframe.serverplayers.setText(currentserverdata.players);
+					connectframe.serverdata.setText(currentserverdata.getServerData());
+				}
+				if(read instanceof GameData) {
+					GameData gamedata = (GameData)read;
+					if(gamedata.bases!=null) {
+						bases = gamedata.bases;
+					}
+				}
+			} catch (ClassNotFoundException e) {
+				connectframe.addText(e.getMessage()+" ("+ip+":"+port+")\n");
+				e.printStackTrace();
+			} catch (IOException e) {
+				connectframe.addText(e.getMessage()+" ("+ip+":"+port+")\n");
+				e.printStackTrace();
+			}
+		}
+	}
+	public class GameFrame extends JFrame {
+		public GameFrame() {
+			this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			this.setSize(Toolkit.getDefaultToolkit().getScreenSize());
+			this.setUndecorated(true);
+			this.addMouseListener(new MouseListener() {
+				@Override
+				public void mousePressed(MouseEvent arg0) {
+					
+				}
+				@Override
+				public void mouseReleased(MouseEvent arg0) {
+					
+				}
+				@Override
+				public void mouseClicked(MouseEvent arg0) {}
+				@Override
+				public void mouseEntered(MouseEvent arg0) {}
+				@Override
+				public void mouseExited(MouseEvent arg0) {}
+			});
+		}
 	}
 	public class ConnectFrame extends JFrame {
 		JPanel panel;
@@ -172,6 +306,9 @@ public class Client implements Runnable{
 			tim = new Timer(200, new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
+					if(bases.size()>0) {
+						System.out.println("Bases:"+bases);
+					}
 					update();
 				}
 			});
@@ -227,87 +364,6 @@ public class Client implements Runnable{
 		}
 		public void setText(String s) {
 			serverplayers.setText(s);
-		}
-	}
-	public String trimString(String s) {
-		char[] chars = s.toCharArray();
-		String toret = "";
-		for(int a=0; a<chars.length; a++) {
-			if(chars[a]>=48 && chars[a]<=57) {
-				toret += ""+chars[a];
-			}
-		}
-		return toret;
-	}
-	@Override
-	public void run() {
-		while(true) {
-			if(startclient) {
-				startclient = false;
-				InetAddress hostIP = null;
-				try {
-					connectframe.addText("Converting ip adress:"+ip+"\n");
-					hostIP = InetAddress.getByName(ip);
-					connectframe.addText("  -Done converting, result is:"+hostIP+"\n");
-					if (hostIP == null) {
-						connectframe.addText("ip invalid, returning\n");
-						return;
-					}
-					connectframe.addText("Creating socket on "+ip+":"+port+"\n");
-					socket = new Socket(hostIP, port);
-					connectframe.addText("Creating ObjectOutputStream\n");
-					hostout = new ObjectOutputStream(socket.getOutputStream());
-					connectframe.addText("Flushing ObjectOutputStream\n");
-					hostout.flush();
-					connectframe.addText("Creating ObjectInputStream\n");
-					hostin = new ObjectInputStream(socket.getInputStream());
-					System.out.println("Sending :"+thisplayer);
-					send(thisplayer);
-					connectframe.start.setText("Update");
-					connectframe.setTitle(connectframe.getTitle()+" connected to ("+ip+":"+port+")");
-					read();
-				} catch (UnknownHostException e) {
-					e.printStackTrace();
-					connectframe.addText(e.getMessage()+" ("+ip+":"+port+")");
-				} catch (IOException e) {
-					e.printStackTrace();
-					connectframe.addText(e.getMessage()+" ("+ip+":"+port+")");
-				}
-			}
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	public void send(Object o) {
-		try {
-			hostout.writeUnshared(o);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	public void read() {
-		while(true) {
-			try {
-				Object read = hostin.readUnshared();
-				if(read instanceof PlayerConfirm) {
-					String str = ((PlayerConfirm)read).msg;
-					message2 = str;
-				}
-				if(read instanceof ServerData) {
-					currentserverdata = (ServerData)read;
-					connectframe.serverplayers.setText(currentserverdata.players);
-					connectframe.serverdata.setText(currentserverdata.getServerData());
-				}
-			} catch (ClassNotFoundException e) {
-				connectframe.addText(e.getMessage()+" ("+ip+":"+port+")\n");
-				e.printStackTrace();
-			} catch (IOException e) {
-				connectframe.addText(e.getMessage()+" ("+ip+":"+port+")\n");
-				e.printStackTrace();
-			}
 		}
 	}
 }

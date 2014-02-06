@@ -6,8 +6,9 @@ public class ServerData implements Serializable{
 	public String players;
 	public int radius;
 	public String ip;
+	public boolean gamestarted;
 	public String getServerData() {
-		String s = "IP="+ip+"\nRadius="+radius;
+		String s = "IP="+ip+"\nRadius="+radius+"\nGamestarted="+gamestarted;
 		return s;
 	}
 }
