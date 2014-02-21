@@ -13,9 +13,9 @@ public class World{
 	public ArrayList<Ship> ships;
 	private ArrayList<Base> bases;
 	private int radius;
-	private transient GameData gamedata;
-	private transient Server server;
-	private transient Timer gametimer;
+	private GameData gamedata;
+	private Server server;
+	private Timer gametimer;
 	public static final int SMALL = 1;
 	public static final int MEDIUM = 2;
 	public static final int LARGE = 3;
@@ -30,6 +30,7 @@ public class World{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				gamedata.bases = bases;
+				// TODO needs to be changed to not create a new ArrayList every time data is sent
 				gamedata.ships = new ArrayList(ships);
 				sendGameData();
 			}
