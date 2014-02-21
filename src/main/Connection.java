@@ -42,6 +42,9 @@ public class Connection implements Runnable{
 			try {
 				Object ob = in.readUnshared();
 				System.out.println("Read:"+ob);
+				if(ob instanceof Ship) {
+					server.world.addShip((Ship)ob);
+				}
 				if(ob instanceof Player) {
 					Player com = (Player)ob;
 					PlayerConfirm good = new PlayerConfirm();

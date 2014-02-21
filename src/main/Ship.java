@@ -2,11 +2,15 @@ package main;
 
 import java.io.Serializable;
 
-public class Base implements Serializable{
+public class Ship implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private int x, y;
 	private int width, height;
 	private Player player;
-	public Base(Player mine, int sx, int sy, int sw, int sh) {
+	public Ship(Player mine, int sx, int sy, int sw, int sh) {
 		x = sx;
 		y = sy;
 		width = sw;

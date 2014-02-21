@@ -13,4 +13,7 @@ public class Player implements Serializable{
 	public String toString() {
 		return name+" ("+color.getRed()+","+color.getGreen()+","+color.getBlue()+")";
 	}
+	public boolean equals(Player other) {
+		return other.color.equals(this.color);
+	}
 }

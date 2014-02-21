@@ -48,7 +48,8 @@ public class Server implements Runnable {
 			public void actionPerformed(ActionEvent e) {
 				serverdata.players = worldframe.players.getText();
 				serverdata.radius = World.getRadius(selectedworldsize);
-				for(Connection c : connections) {
+				for(int a=0; a<connections.size(); a++) {
+					Connection c = connections.get(a);
 					c.send(serverdata);
 				}
 			}

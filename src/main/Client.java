@@ -1,7 +1,9 @@
 package main;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -24,7 +26,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.Timer;
-import javax.swing.border.Border;
 
 import data.GameData;
 import data.PlayerConfirm;
@@ -47,14 +48,25 @@ public class Client implements Runnable{
 	GameFrame gameframe;
 	public boolean startclient;
 	private ArrayList<Base> bases;
+	private ArrayList<Ship> ships;
+	Point lookingat;
+	boolean zoomtobase;
+	public static final int CAMERASPEED = 10;
+	/**
+	 * stores the most recent arrowkey that was pressed
+	 */
+	int arrowkey;
 	public Client() {
 		bases = new ArrayList<Base>();
+		ships = new ArrayList<Ship>();
 		thisplayer = new Player();
 		message = "asdf";
 		message2 = "";
 	    this.mythread = new Thread(this);
 	    connectframe = new ConnectFrame();
 	    gameframe = new GameFrame();
+	    lookingat = new Point(0,0);
+	    zoomtobase = true;
 	}
 	public static void main(String[] args) {
 		Client c = new Client();
@@ -123,6 +135,7 @@ public class Client implements Runnable{
 	public void changeFrame() {
 		connectframe.setVisible(false);
 		gameframe.setVisible(true);
+		gameframe.gametimer.start();
 	}
 	public void read() {
 		while(true) {
@@ -152,6 +165,18 @@ public class Client implements Runnable{
 					if(gamedata.bases!=null) {
 						bases = gamedata.bases;
 					}
+					if(gamedata.ships!=null) {
+						ships = gamedata.ships;
+					}
+					if(zoomtobase) {
+						for(int a=0; a<bases.size(); a++) {
+							if(bases.get(a).getPlayer().color.equals(thisplayer.color)) {
+								lookingat.x = bases.get(a).getX()-gameframe.getWidth()/2;
+								lookingat.y = bases.get(a).getY()-gameframe.getHeight()/2;
+								zoomtobase = false;
+							}
+						}
+					}
 				}
 			} catch (ClassNotFoundException e) {
 				connectframe.addText(e.getMessage()+" ("+ip+":"+port+")\n");
@@ -163,14 +188,60 @@ public class Client implements Runnable{
 		}
 	}
 	public class GameFrame extends JFrame {
+		public JPanel draw;
+		public Timer gametimer;
 		public GameFrame() {
 			this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			this.setSize(Toolkit.getDefaultToolkit().getScreenSize());
 			this.setUndecorated(true);
+			draw = new JPanel() {
+				@Override
+				public void paintComponent(Graphics g) {
+					g.setColor(Color.black);
+					g.fillRect(0, 0, getWidth(), getHeight());
+					for(int a=0; a<bases.size(); a++) {
+						Base b = bases.get(a);
+						g.setColor(b.getPlayer().color);
+						g.fillRect(b.getX()-lookingat.x-b.getWidth()/2, b.getY()-lookingat.y-b.getHeight()/2, b.getWidth(), b.getHeight());
+					}
+					for(int a=0; a<ships.size(); a++) {
+						Ship b = ships.get(a);
+						g.setColor(b.getPlayer().color);
+						g.fillRect(b.getX()-lookingat.x-b.getWidth()/2, b.getY()-lookingat.y-b.getHeight()/2, b.getWidth(), b.getHeight());
+					}
+					g.setColor(Color.white);
+					g.drawString(lookingat.x+","+lookingat.y, 10, 30);
+				}
+			};
+			draw.setBackground(Color.black);
+			this.add(draw, BorderLayout.CENTER);
+			this.addKeyListener(new KeyListener() {
+
+				@Override
+				public void keyPressed(KeyEvent e) {
+					arrowkey = e.getKeyCode();
+				}
+
+				@Override
+				public void keyReleased(KeyEvent e) {
+					if(arrowkey==e.getKeyCode()) {
+						arrowkey=0;
+					}
+				}
+
+				@Override
+				public void keyTyped(KeyEvent arg0) {
+				
+				}
+			});
 			this.addMouseListener(new MouseListener() {
 				@Override
-				public void mousePressed(MouseEvent arg0) {
-					
+				public void mousePressed(MouseEvent e) {
+					int x = e.getX()+lookingat.x;
+					int y = e.getY()+lookingat.y;
+					Ship s = new Ship(thisplayer, x, y, 20, 20);
+					send(s);
+					System.out.println("Sending Ship:"+s.toString());
 				}
 				@Override
 				public void mouseReleased(MouseEvent arg0) {
@@ -182,6 +253,24 @@ public class Client implements Runnable{
 				public void mouseEntered(MouseEvent arg0) {}
 				@Override
 				public void mouseExited(MouseEvent arg0) {}
+			});
+			gametimer = new Timer(33, new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					if(arrowkey == KeyEvent.VK_RIGHT) {
+						lookingat.x+=CAMERASPEED;
+					}
+					if(arrowkey == KeyEvent.VK_LEFT) {
+						lookingat.x-=CAMERASPEED;
+					}
+					if(arrowkey == KeyEvent.VK_UP) {
+						lookingat.y-=CAMERASPEED;
+					}
+					if(arrowkey == KeyEvent.VK_DOWN) {
+						lookingat.y+=CAMERASPEED;
+					}
+					repaint();
+				}
 			});
 		}
 	}
@@ -306,9 +395,9 @@ public class Client implements Runnable{
 			tim = new Timer(200, new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					if(bases.size()>0) {
-						System.out.println("Bases:"+bases);
-					}
+//					if(bases.size()>0) {
+//						System.out.println("Bases:"+bases);
+//					}
 					update();
 				}
 			});
@@ -356,7 +445,6 @@ public class Client implements Runnable{
 				message = "Range for colors is [0,255]";
 				System.out.println("Color box is broken!");
 			}
-//				System.out.println("update:"+thisplayer);
 			repaint();
 		}
 		public void addText(String s) {
