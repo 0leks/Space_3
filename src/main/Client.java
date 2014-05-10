@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -27,9 +28,11 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.Timer;
 
+import data.Command;
 import data.GameData;
 import data.PlayerConfirm;
 import data.ServerData;
+import data.ShipData;
 
 public class Client implements Runnable{
 	Socket socket;
@@ -49,16 +52,19 @@ public class Client implements Runnable{
 	public boolean startclient;
 	private ArrayList<Base> bases;
 	private ArrayList<Ship> ships;
+	private ArrayList<Laser> lasers;
 	Point lookingat;
 	boolean zoomtobase;
-	public static final int CAMERASPEED = 10;
-	/**
-	 * stores the most recent arrowkey that was pressed
-	 */
-	int arrowkey;
+	public static final int CAMERASPEED = 20;
+	public int FREQ = 21;
+	private int cameradx, camerady;
+	public ArrayList<Rectangle> target;
+	public Timer tim;
 	public Client() {
+		target = new ArrayList<Rectangle>();
 		bases = new ArrayList<Base>();
 		ships = new ArrayList<Ship>();
+		lasers = new ArrayList<Laser>();
 		thisplayer = new Player();
 		message = "asdf";
 		message2 = "";
@@ -72,7 +78,14 @@ public class Client implements Runnable{
 		Client c = new Client();
 		c.mythread.start();
 	}
-	
+	public Ship getShip(int id) {
+		for(int a=0; a<ships.size(); a++) {
+			if(ships.get(a).getID()==id) {
+				return ships.get(a);
+			}
+		}
+		return null;
+	}
 	public String trimString(String s) {
 		char[] chars = s.toCharArray();
 		String toret = "";
@@ -141,6 +154,9 @@ public class Client implements Runnable{
 		while(true) {
 			try {
 				Object read = hostin.readUnshared();
+				if(read instanceof World) {
+					
+				}
 				if(read instanceof PlayerConfirm) {
 					String str = ((PlayerConfirm)read).msg;
 					message2 = str;
@@ -160,24 +176,75 @@ public class Client implements Runnable{
 					connectframe.serverplayers.setText(currentserverdata.players);
 					connectframe.serverdata.setText(currentserverdata.getServerData());
 				}
-				if(read instanceof GameData) {
-					GameData gamedata = (GameData)read;
-					if(gamedata.bases!=null) {
-						bases = gamedata.bases;
+				if(read instanceof Base) {
+					Base s = (Base)read;
+					boolean added = false;
+					for(int a=0; a<bases.size(); a++) {
+						if(bases.get(a).id==s.id) {
+							bases.remove(a);
+							bases.add(s);
+							added = true;
+							break;
+						}
 					}
-					if(gamedata.ships!=null) {
-						ships = gamedata.ships;
+					if(!added) {
+						bases.add(s);
 					}
-					if(zoomtobase) {
-						for(int a=0; a<bases.size(); a++) {
-							if(bases.get(a).getPlayer().color.equals(thisplayer.color)) {
-								lookingat.x = bases.get(a).getX()-gameframe.getWidth()/2;
-								lookingat.y = bases.get(a).getY()-gameframe.getHeight()/2;
-								zoomtobase = false;
-							}
+				}
+				if(read instanceof Laser) {
+					Laser l = (Laser)read;
+					System.out.println("Read laser");
+					lasers.add(l);
+				}
+				if(read instanceof ShipData) {
+					ShipData s = (ShipData)read;
+					for(int a=0; a<ships.size(); a++) {
+						if(ships.get(a).getID()==s.id) {
+							ships.get(a).become(s);
+							break;
 						}
 					}
 				}
+				if(read instanceof Ship) {
+					Ship s = (Ship)read;
+					boolean added = false;
+					for(int a=0; a<ships.size(); a++) {
+						if(ships.get(a).getID()==s.getID()) {
+//							System.out.println("got ship");
+							ships.get(a).become(s);
+//							ships.remove(a);
+//							ships.add(s);
+							added = true;
+							break;
+						}
+					}
+					if(!added) {
+						ships.add(s);
+					}
+				}
+//				if(read instanceof GameData) {
+//					GameData gamedata = (GameData)read;
+//					if(gamedata.bases!=null) {
+//						bases = gamedata.bases;
+//					}
+//					if(gamedata.ships!=null) {
+//						System.out.println("Read Ships:");
+//						ships.clear();
+//						for(Ship s : ships) {
+//							ships.add(s);
+//							System.out.println(s);
+//						}
+//					}
+//					if(zoomtobase) {
+//						for(int a=0; a<bases.size(); a++) {
+//							if(bases.get(a).getPlayer().color.equals(thisplayer.color)) {
+//								lookingat.x = bases.get(a).getX()-gameframe.getWidth()/2;
+//								lookingat.y = bases.get(a).getY()-gameframe.getHeight()/2;
+//								zoomtobase = false;
+//							}
+//						}
+//					}
+//				}
 			} catch (ClassNotFoundException e) {
 				connectframe.addText(e.getMessage()+" ("+ip+":"+port+")\n");
 				e.printStackTrace();
@@ -199,15 +266,34 @@ public class Client implements Runnable{
 				public void paintComponent(Graphics g) {
 					g.setColor(Color.black);
 					g.fillRect(0, 0, getWidth(), getHeight());
+					
 					for(int a=0; a<bases.size(); a++) {
 						Base b = bases.get(a);
 						g.setColor(b.getPlayer().color);
 						g.fillRect(b.getX()-lookingat.x-b.getWidth()/2, b.getY()-lookingat.y-b.getHeight()/2, b.getWidth(), b.getHeight());
 					}
+//					System.out.println(ships.size());
 					for(int a=0; a<ships.size(); a++) {
 						Ship b = ships.get(a);
 						g.setColor(b.getPlayer().color);
+//						System.out.println(b.getPlayer().color);
+//						System.out.println(b.id);
 						g.fillRect(b.getX()-lookingat.x-b.getWidth()/2, b.getY()-lookingat.y-b.getHeight()/2, b.getWidth(), b.getHeight());
+					}
+					for(int a=0; a<lasers.size(); a++) {
+						Laser l = lasers.get(a);
+						Ship from = getShip(l.from);
+						Ship to = getShip(l.to);
+						if(from==null || to==null) { 
+							System.out.println("Removing Laser");
+							lasers.remove(a--);
+						} else {
+//							System.out.println("Drawing lasre at"+(from.getX()-lookingat.x)+","+(from.getY()-lookingat.y)+","+(to.getX()-lookingat.x)+","+( to.getY()-lookingat.y)+",");
+							g.setColor(from.getPlayer().color);
+							for(int b=0; b<l.width; b++) {
+								g.drawLine(from.getX()-lookingat.x+l.width/2-b, from.getY()-lookingat.y, to.getX()-lookingat.x+l.width/2-b, to.getY()-lookingat.y);
+							}
+						}
 					}
 					g.setColor(Color.white);
 					g.drawString(lookingat.x+","+lookingat.y, 10, 30);
@@ -216,22 +302,40 @@ public class Client implements Runnable{
 			draw.setBackground(Color.black);
 			this.add(draw, BorderLayout.CENTER);
 			this.addKeyListener(new KeyListener() {
-
 				@Override
 				public void keyPressed(KeyEvent e) {
-					arrowkey = e.getKeyCode();
-				}
-
-				@Override
-				public void keyReleased(KeyEvent e) {
-					if(arrowkey==e.getKeyCode()) {
-						arrowkey=0;
+					int k = e.getKeyCode();
+					if(k==KeyEvent.VK_UP) {
+						camerady = -1;
+					}
+					if(k==KeyEvent.VK_DOWN) {
+						camerady = 1;
+					}
+					if(k==KeyEvent.VK_LEFT) {
+						cameradx = -1;
+					}
+					if(k==KeyEvent.VK_RIGHT) {
+						cameradx = 1;
 					}
 				}
-
+				@Override
+				public void keyReleased(KeyEvent e) {
+					int k = e.getKeyCode();
+					if(k==KeyEvent.VK_UP) {
+						camerady = 0;
+					}
+					if(k==KeyEvent.VK_DOWN) {
+						camerady = 0;
+					}
+					if(k==KeyEvent.VK_LEFT) {
+						cameradx = 0;
+					}
+					if(k==KeyEvent.VK_RIGHT) {
+						cameradx = 0;
+					}
+				}
 				@Override
 				public void keyTyped(KeyEvent arg0) {
-				
 				}
 			});
 			this.addMouseListener(new MouseListener() {
@@ -239,9 +343,23 @@ public class Client implements Runnable{
 				public void mousePressed(MouseEvent e) {
 					int x = e.getX()+lookingat.x;
 					int y = e.getY()+lookingat.y;
-					Ship s = new Ship(thisplayer, x, y, 20, 20);
-					send(s);
-					System.out.println("Sending Ship:"+s.toString());
+					if(e.getButton()==MouseEvent.BUTTON1) {
+						Ship s = new Ship(thisplayer, x, y, 20, 20, 10, 100, 50, 10);
+						send(s);
+						System.out.println("Sending Ship:"+s.toString());
+					} else if(e.getButton()==MouseEvent.BUTTON2) {
+						for(int a=x-200; a<=x+200; a+=FREQ) {
+							for(int b=y-200; b<=y+200; b+=FREQ) {
+								Ship s = new Ship(thisplayer, a, b, 20, 20, 10, 100, 50, 10);
+								send(s);
+								System.out.println("Sending Ship:"+s.toString());
+							}
+						}
+					} else if(e.getButton()==MouseEvent.BUTTON3) {
+						Command c = new Command(Command.MOVE, x, y);
+						send(c);
+						System.out.println("Sending Command:"+c.toString());
+					}
 				}
 				@Override
 				public void mouseReleased(MouseEvent arg0) {
@@ -257,17 +375,13 @@ public class Client implements Runnable{
 			gametimer = new Timer(33, new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
-					if(arrowkey == KeyEvent.VK_RIGHT) {
-						lookingat.x+=CAMERASPEED;
-					}
-					if(arrowkey == KeyEvent.VK_LEFT) {
-						lookingat.x-=CAMERASPEED;
-					}
-					if(arrowkey == KeyEvent.VK_UP) {
-						lookingat.y-=CAMERASPEED;
-					}
-					if(arrowkey == KeyEvent.VK_DOWN) {
-						lookingat.y+=CAMERASPEED;
+					lookingat.x+=CAMERASPEED*cameradx;
+					lookingat.y+=CAMERASPEED*camerady;
+					for(int a=0; a<lasers.size(); a++) {
+						Laser l = lasers.get(a);
+						if(l.widen()) {
+							lasers.remove(a--);
+						}
 					}
 					repaint();
 				}

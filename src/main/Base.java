@@ -6,7 +6,10 @@ public class Base implements Serializable{
 	private int x, y;
 	private int width, height;
 	private Player player;
+	public int id;
+	public static int sid;
 	public Base(Player mine, int sx, int sy, int sw, int sh) {
+		id = sid++;
 		x = sx;
 		y = sy;
 		width = sw;

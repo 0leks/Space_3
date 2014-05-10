@@ -43,7 +43,7 @@ public class Server implements Runnable {
 		thread = new Thread(this);
 		creationframe = new CreationFrame();
 		connections = new ArrayList<Connection>();
-		servertimer = new Timer(100, new ActionListener() {
+		servertimer = new Timer(World.GAMETIMER, new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				serverdata.players = worldframe.players.getText();
@@ -55,6 +55,9 @@ public class Server implements Runnable {
 			}
 		});
 		serverdata = new ServerData();
+	}
+	public void playerMoveCommand(Player p, int x, int y) {
+		world.playerMoveCommand(p, x, y);
 	}
 	public void sendToAll(Object o) {
 		for(int a=0; a<connections.size(); a++) {

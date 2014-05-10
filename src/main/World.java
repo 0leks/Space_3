@@ -1,6 +1,8 @@
 package main;
 
 import java.util.ArrayList;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -11,11 +13,14 @@ import data.GameData;
 public class World{
 	private ArrayList<Player> players;
 	public ArrayList<Ship> ships;
+	public ArrayList<Ship> sortedships;
 	private ArrayList<Base> bases;
+	private ArrayList<Laser> lasers;
 	private int radius;
-	private GameData gamedata;
-	private Server server;
-	private Timer gametimer;
+	private transient GameData gamedata;
+	private transient Server server;
+	private transient Timer gametimer;
+	public static int GAMETIMER = 50;
 	public static final int SMALL = 1;
 	public static final int MEDIUM = 2;
 	public static final int LARGE = 3;
@@ -24,24 +29,132 @@ public class World{
 		players = new ArrayList<Player>();
 		bases = new ArrayList<Base>();
 		ships = new ArrayList<Ship>();
+		sortedships = new ArrayList<Ship>();
+		lasers = new ArrayList<Laser>();
 		setSize(size);
 		gamedata = new GameData();
-		gametimer= new Timer(100, new ActionListener() {
+		gametimer= new Timer(World.GAMETIMER, new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				gamedata.bases = bases;
-				// TODO needs to be changed to not create a new ArrayList every time data is sent
-				gamedata.ships = new ArrayList(ships);
+				for(int a=0; a<ships.size(); a++) {
+					Ship s = ships.get(a);
+					if(s==null) {
+						ships.remove(a--);
+						continue;
+					}
+					if(s.hasTarget()) {
+						Rectangle move = s.getMoveX();
+						if(!collides(s, move)) {
+							s.setPos(move);
+						}
+						move = s.getMoveY();
+						if(!collides(s, move)) {
+							s.setPos(move);
+						}
+					}
+					s.servertic();
+					if(s.laserReady()) {
+						Ship en = getClosestEnemy(s);
+						if(en!=null && s.canShoot(en)) {
+							s.shot();
+							Laser l = new Laser(s.getID(), en.getID(), s.getCooldown()-4, s.getDamage());
+							System.out.println("Shooting "+en.getCooldown());
+							lasers.add(l);
+							server.sendToAll(l);
+						}
+					}
+//					ships.get(a).move();
+				}
+				for(int a=0; a<lasers.size(); a++) {
+					Laser l = lasers.get(a);
+					if(l.widen()) {
+						Ship en = getShip(l.to);
+						if(en!=null) {
+							en.takeDamage(l.damage);
+						}
+						lasers.remove(a--);
+					}
+				}
+//				gamedata = new GameData();
+//				gamedata.bases = bases;
+//				// TODO needs to be changed to not create a new ArrayList every time data is sent
+//				gamedata.ships = new ArrayList(ships);
 				sendGameData();
 			}
 		});
 	}
+	public Ship getShip(int id) {
+		for(int a=0; a<ships.size(); a++) {
+			if(ships.get(a).getID()==id) {
+				return ships.get(a);
+			}
+		}
+		return null;
+	}
+	public Ship getClosestEnemy(Ship s) {
+		Ship en = null;
+		int dist = 99999;
+		for(int a = 0; a<sortedships.size(); a++) {
+			Ship b = sortedships.get(a);
+			if(!b.getPlayer().equals(s.getPlayer())) {
+				int d = b.getDistanceFrom(s);
+				if(d<dist) {
+					dist = d;
+					en = b;
+				}
+			}
+		}
+		return en;
+	}
+	public boolean collides(Ship s, Rectangle newpos) {
+		for(int a=0; a<ships.size(); a++) {
+			Ship sh = ships.get(a);
+			if(sh!=s && sh.collides(newpos)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	public void playerMoveCommand(Player p, int x, int y) {
+		for(int a=0; a<sortedships.size(); a++) {
+			Ship s = sortedships.get(a);
+			if(s.getPlayer().equals(p)) {
+				System.out.println("Setting target of Ship "+s+" to ("+x+","+y+")");
+				s.setTarget(new Point(x, y));
+			}
+		}
+	}
 	public void addShip(Ship s) {
 		System.out.println("Adding Ship:"+s.toString());
 		ships.add(s);
+		sortedships.add(s);
 	}
 	public void sendGameData() {
-		server.sendToAll(gamedata);
+//		System.out.println("Sending:");
+//		for(Ship s : gamedata.ships) {
+//			System.out.println(s);
+//		}
+//		server.sendToAll(gamedata);
+		for(int a=0; a<bases.size(); a++) {
+			server.sendToAll(bases.get(a));
+		}
+		if(ships.size()>0) {
+			for(int a=0; a<ships.size() && a<100 ; a++) {
+				Ship s = ships.remove(0);
+				if(s.sent) {
+					server.sendToAll(s.getData());
+				} else {
+					server.sendToAll(s);
+				}
+				ships.add(s);
+			}
+		}
+//		for(int a=0; a<lasers.size(); a++) {
+//			
+//		}
+//		for(int a=0; a<ships.size(); a++) {
+//			server.sendToAll(ships.get(a));
+//		}
 //		gamedata.bases = null;
 //		gamedata.ships = null;
 	}

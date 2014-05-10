@@ -32,7 +32,6 @@ public class Connection implements Runnable{
 		try {
 			out.writeUnshared(o);//writeObject(o);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -42,8 +41,9 @@ public class Connection implements Runnable{
 			try {
 				Object ob = in.readUnshared();
 				System.out.println("Read:"+ob);
+				
 				if(ob instanceof Ship) {
-					server.world.addShip((Ship)ob);
+					server.world.addShip(((Ship)ob).create());
 				}
 				if(ob instanceof Player) {
 					Player com = (Player)ob;
@@ -67,6 +67,10 @@ public class Connection implements Runnable{
 					Command com = (Command)ob;
 					if(com.type==Command.CREATEUNIT) {
 //						server.world.createUnit(player.color);
+					}
+					if(com.type==Command.MOVE) {
+						System.out.println("Received Command:"+com);
+						server.playerMoveCommand(this.player, com.x, com.y);
 					}
 				}
 			} catch (IOException e) {
