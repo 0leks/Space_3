@@ -31,6 +31,7 @@ import javax.swing.Timer;
 import data.Command;
 import data.GameData;
 import data.PlayerConfirm;
+import data.RemoveLaser;
 import data.ServerData;
 import data.ShipData;
 
@@ -53,6 +54,7 @@ public class Client implements Runnable{
 	private ArrayList<Base> bases;
 	private ArrayList<Ship> ships;
 	private ArrayList<Laser> lasers;
+	private ArrayList<Explosion> explosions;
 	Point lookingat;
 	boolean zoomtobase;
 	public static final int CAMERASPEED = 20;
@@ -65,6 +67,7 @@ public class Client implements Runnable{
 		bases = new ArrayList<Base>();
 		ships = new ArrayList<Ship>();
 		lasers = new ArrayList<Laser>();
+		explosions = new ArrayList<Explosion>();
 		thisplayer = new Player();
 		message = "asdf";
 		message2 = "";
@@ -176,13 +179,24 @@ public class Client implements Runnable{
 					connectframe.serverplayers.setText(currentserverdata.players);
 					connectframe.serverdata.setText(currentserverdata.getServerData());
 				}
+				if(read instanceof RemoveLaser) {
+//					RemoveLaser rl = (RemoveLaser)read;
+//					for(int a=lasers.size()-1; a>=0; a--) {
+//						if(lasers.get(a).from==rl.l.from) {
+//							lasers.remove(a);
+//							System.out.println("Removing Laser! because ship died");
+//						}
+//					}
+					// comented this out temporarily to avoid null pointer exceptions.
+				}
 				if(read instanceof Base) {
 					Base s = (Base)read;
 					boolean added = false;
 					for(int a=0; a<bases.size(); a++) {
 						if(bases.get(a).id==s.id) {
-							bases.remove(a);
-							bases.add(s);
+							bases.get(a).become(s);
+//							bases.remove(a);
+//							bases.add(s);
 							added = true;
 							break;
 						}
@@ -193,15 +207,23 @@ public class Client implements Runnable{
 				}
 				if(read instanceof Laser) {
 					Laser l = (Laser)read;
-					System.out.println("Read laser");
 					lasers.add(l);
 				}
 				if(read instanceof ShipData) {
 					ShipData s = (ShipData)read;
 					for(int a=0; a<ships.size(); a++) {
-						if(ships.get(a).getID()==s.id) {
-							ships.get(a).become(s);
-							break;
+						Ship ship = ships.get(a);
+						if(ship.getID()==s.id) {
+							if(s.dead) {
+								ships.remove(a);
+								System.out.println("Ship "+s.id+" was removed.");
+								Explosion ex = new Explosion(ship.getX(), ship.getY(), ship.getWidth()*3/2);
+								explosions.add(ex);
+								break;
+							} else {
+								ships.get(a).become(s);
+								break;
+							}
 						}
 					}
 				}
@@ -210,7 +232,6 @@ public class Client implements Runnable{
 					boolean added = false;
 					for(int a=0; a<ships.size(); a++) {
 						if(ships.get(a).getID()==s.getID()) {
-//							System.out.println("got ship");
 							ships.get(a).become(s);
 //							ships.remove(a);
 //							ships.add(s);
@@ -222,29 +243,6 @@ public class Client implements Runnable{
 						ships.add(s);
 					}
 				}
-//				if(read instanceof GameData) {
-//					GameData gamedata = (GameData)read;
-//					if(gamedata.bases!=null) {
-//						bases = gamedata.bases;
-//					}
-//					if(gamedata.ships!=null) {
-//						System.out.println("Read Ships:");
-//						ships.clear();
-//						for(Ship s : ships) {
-//							ships.add(s);
-//							System.out.println(s);
-//						}
-//					}
-//					if(zoomtobase) {
-//						for(int a=0; a<bases.size(); a++) {
-//							if(bases.get(a).getPlayer().color.equals(thisplayer.color)) {
-//								lookingat.x = bases.get(a).getX()-gameframe.getWidth()/2;
-//								lookingat.y = bases.get(a).getY()-gameframe.getHeight()/2;
-//								zoomtobase = false;
-//							}
-//						}
-//					}
-//				}
 			} catch (ClassNotFoundException e) {
 				connectframe.addText(e.getMessage()+" ("+ip+":"+port+")\n");
 				e.printStackTrace();
@@ -272,27 +270,44 @@ public class Client implements Runnable{
 						g.setColor(b.getPlayer().color);
 						g.fillRect(b.getX()-lookingat.x-b.getWidth()/2, b.getY()-lookingat.y-b.getHeight()/2, b.getWidth(), b.getHeight());
 					}
-//					System.out.println(ships.size());
+					for(int a=0; a<explosions.size(); a++) {
+						Explosion e = explosions.get(a);
+						g.setColor(Color.orange);
+						g.fillOval(e.x-e.radius/2-lookingat.x, e.y-e.radius/2-lookingat.y, e.radius, e.radius);
+					}
 					for(int a=0; a<ships.size(); a++) {
 						Ship b = ships.get(a);
 						g.setColor(b.getPlayer().color);
-//						System.out.println(b.getPlayer().color);
-//						System.out.println(b.id);
 						g.fillRect(b.getX()-lookingat.x-b.getWidth()/2, b.getY()-lookingat.y-b.getHeight()/2, b.getWidth(), b.getHeight());
 					}
+					
 					for(int a=0; a<lasers.size(); a++) {
 						Laser l = lasers.get(a);
 						Ship from = getShip(l.from);
 						Ship to = getShip(l.to);
 						if(from==null || to==null) { 
-							System.out.println("Removing Laser");
+							System.out.println("Removing Laser because either target or source is null");
 							lasers.remove(a--);
 						} else {
-//							System.out.println("Drawing lasre at"+(from.getX()-lookingat.x)+","+(from.getY()-lookingat.y)+","+(to.getX()-lookingat.x)+","+( to.getY()-lookingat.y)+",");
-							g.setColor(from.getPlayer().color);
-							for(int b=0; b<l.width; b++) {
-								g.drawLine(from.getX()-lookingat.x+l.width/2-b, from.getY()-lookingat.y, to.getX()-lookingat.x+l.width/2-b, to.getY()-lookingat.y);
+//							g.setColor(from.getPlayer().color);
+//							for(int b=-l.width/2; b<l.width/2; b++) {
+//								int xsh = 0;
+//								int ysh = 0;
+//								if(Math.random()<.5) {
+//									xsh = b;
+//									ysh = 0;
+//								} else {
+//									xsh = 0;
+//									ysh = b;
+//								}
+							double ratio = (l.width*1.0)/l.ttl;
+//							System.out.println(ratio);
+							if(ratio>.9) {
+								g.setColor(new Color((int)(from.getPlayer().color.getRed()*ratio), (int)(from.getPlayer().color.getGreen()*ratio), (int)(from.getPlayer().color.getBlue()*ratio)));
+	//							g.setColor(from.getPlayer().color);
+								g.drawLine(from.getX()-lookingat.x, from.getY()-lookingat.y, to.getX()-lookingat.x, to.getY()-lookingat.y);
 							}
+//							}
 						}
 					}
 					g.setColor(Color.white);
@@ -344,13 +359,15 @@ public class Client implements Runnable{
 					int x = e.getX()+lookingat.x;
 					int y = e.getY()+lookingat.y;
 					if(e.getButton()==MouseEvent.BUTTON1) {
-						Ship s = new Ship(thisplayer, x, y, 20, 20, 10, 100, 50, 10);
+						int cd = (int)(Math.random()*100+50);
+						Ship s = new Ship(thisplayer, x, y, 20, 20, 10, cd, 1250, 10, 30);
 						send(s);
 						System.out.println("Sending Ship:"+s.toString());
 					} else if(e.getButton()==MouseEvent.BUTTON2) {
 						for(int a=x-200; a<=x+200; a+=FREQ) {
 							for(int b=y-200; b<=y+200; b+=FREQ) {
-								Ship s = new Ship(thisplayer, a, b, 20, 20, 10, 100, 50, 10);
+								int cd = (int)(Math.random()*100+50);
+								Ship s = new Ship(thisplayer, a, b, 20, 20, 10, cd, 2150, 10, 30);
 								send(s);
 								System.out.println("Sending Ship:"+s.toString());
 							}
@@ -377,10 +394,16 @@ public class Client implements Runnable{
 				public void actionPerformed(ActionEvent arg0) {
 					lookingat.x+=CAMERASPEED*cameradx;
 					lookingat.y+=CAMERASPEED*camerady;
-					for(int a=0; a<lasers.size(); a++) {
+					for(int a=lasers.size()-1; a>=0; a--) {
 						Laser l = lasers.get(a);
 						if(l.widen()) {
 							lasers.remove(a--);
+						}
+					}
+					for(int a = explosions.size()-1; a>=0; a--) {
+						Explosion e = explosions.get(a);
+						if(e.widen()) {
+							explosions.remove(a);
 						}
 					}
 					repaint();
@@ -410,7 +433,6 @@ public class Client implements Runnable{
 					g.drawString("IP Address", 25, 25);
 					g.drawString("Port", 285, 25);
 					g.drawString("Username", 25, 75);
-//					System.out.println("paint:"+thisplayer);
 					g.setColor(thisplayer.color);
 					g.fillRect(385, 80, 29, 29);
 					g.setColor(Color.black);
@@ -509,9 +531,6 @@ public class Client implements Runnable{
 			tim = new Timer(200, new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-//					if(bases.size()>0) {
-//						System.out.println("Bases:"+bases);
-//					}
 					update();
 				}
 			});

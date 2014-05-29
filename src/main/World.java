@@ -9,6 +9,8 @@ import java.awt.event.ActionListener;
 import javax.swing.Timer;
 
 import data.GameData;
+import data.RemoveLaser;
+import data.ShipData;
 
 public class World{
 	private ArrayList<Player> players;
@@ -35,6 +37,26 @@ public class World{
 		gamedata = new GameData();
 		gametimer= new Timer(World.GAMETIMER, new ActionListener() {
 			@Override
+//			public void move() {
+//			if(target!=null) {
+//				double dx = (double)(target.x-gs.moveY();etX())*getSpeed()/100.0;
+//				double dy = (double)(target.y-getY())*getSpeed()/100.0;
+//				if(dx>1)
+//					dx = 1;
+//				if(dx<-1)
+//					dx = -1;
+//				if(dy>1) 
+//					dy=1;
+//				if(dy<-1)
+//					dy=-1;
+//				System.out.println("Ship "+this+" is moving to ("+(x+speed*dx)+","+(y+speed*dy)+")");
+//				x+=speed*dx;
+//				y+=speed*dy;
+//				if(Math.abs(target.x-x)<speed && Math.abs(target.y-y)<speed) {
+//					target = null;
+//				}
+//			}
+//		}
 			public void actionPerformed(ActionEvent e) {
 				for(int a=0; a<ships.size(); a++) {
 					Ship s = ships.get(a);
@@ -58,7 +80,7 @@ public class World{
 						if(en!=null && s.canShoot(en)) {
 							s.shot();
 							Laser l = new Laser(s.getID(), en.getID(), s.getCooldown()-4, s.getDamage());
-							System.out.println("Shooting "+en.getCooldown());
+							System.out.println("Ship "+s.getID()+" Shooting at "+en.getID()+" cd:"+en.getCooldown()+"                 "+s.cooldown);
 							lasers.add(l);
 							server.sendToAll(l);
 						}
@@ -70,7 +92,9 @@ public class World{
 					if(l.widen()) {
 						Ship en = getShip(l.to);
 						if(en!=null) {
-							en.takeDamage(l.damage);
+							if(en.takeDamage(l.damage)) {
+								removeShip(en);
+							}
 						}
 						lasers.remove(a--);
 					}
@@ -83,6 +107,26 @@ public class World{
 			}
 		});
 	}
+	public void removeShip(Ship s) {
+		System.out.println("Removing Ship "+s.getID());
+		ships.remove(s);
+		sortedships.remove(s);
+		ShipData sd = s.getData();
+		sd.dead = true;
+		server.sendToAll(sd);
+		for(int a=0; a<ships.size(); a++) {
+			System.out.println(ships.get(a));
+		}
+		for(int a=lasers.size()-1; a>=0; a--) {
+			Laser l = lasers.get(a);
+			if(l.from==s.getID()) {
+				lasers.remove(a);
+				System.out.println("Removing Laser");
+				RemoveLaser rl = new RemoveLaser(l);
+				server.sendToAll(rl);
+			}
+		}
+	}
 	public Ship getShip(int id) {
 		for(int a=0; a<ships.size(); a++) {
 			if(ships.get(a).getID()==id) {
@@ -90,6 +134,23 @@ public class World{
 			}
 		}
 		return null;
+	}
+	public Ship getRandomCloseEnemy(Ship s) {
+		Ship en = null;
+		int dist = 99999;
+		for(int a = 0; a<sortedships.size(); a++) {
+			Ship b = sortedships.get(a);
+			if(!b.getPlayer().equals(s.getPlayer())) {
+				int d = b.getDistanceFrom(s);
+				if(d<dist) {
+					if(dist==99999 || Math.random()<.5) {
+						dist = d;
+						en = b;
+					}
+				}
+			}
+		}
+		return en;
 	}
 	public Ship getClosestEnemy(Ship s) {
 		Ship en = null;
@@ -109,6 +170,8 @@ public class World{
 	public boolean collides(Ship s, Rectangle newpos) {
 		for(int a=0; a<ships.size(); a++) {
 			Ship sh = ships.get(a);
+			if(sh==null)
+				System.out.println("SH is null!!");
 			if(sh!=s && sh.collides(newpos)) {
 				return true;
 			}
@@ -119,7 +182,7 @@ public class World{
 		for(int a=0; a<sortedships.size(); a++) {
 			Ship s = sortedships.get(a);
 			if(s.getPlayer().equals(p)) {
-				System.out.println("Setting target of Ship "+s+" to ("+x+","+y+")");
+				System.out.println("Setting move target of Ship "+s+" to ("+x+","+y+")");
 				s.setTarget(new Point(x, y));
 			}
 		}
@@ -130,11 +193,6 @@ public class World{
 		sortedships.add(s);
 	}
 	public void sendGameData() {
-//		System.out.println("Sending:");
-//		for(Ship s : gamedata.ships) {
-//			System.out.println(s);
-//		}
-//		server.sendToAll(gamedata);
 		for(int a=0; a<bases.size(); a++) {
 			server.sendToAll(bases.get(a));
 		}

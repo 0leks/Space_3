@@ -18,11 +18,13 @@ public class Ship implements Serializable {
 	private Rectangle bounds;
 	private ShipData data;
 	public boolean sent;
-	private int cooldown;
+	public int cooldown;
 	private final int COOLDOWN;
 	private int range;
 	private int damage;
-	public Ship(Player mine, int sx, int sy, int sw, int sh, int sspeed, int scooldown, int srange, int sdamage) {
+	private int health;
+	public Ship(Player mine, int sx, int sy, int sw, int sh, int sspeed, int scooldown, int srange, int sdamage, int shealth) {
+		health = shealth;
 		range = srange;
 		COOLDOWN = scooldown;
 		cooldown = 0;
@@ -39,7 +41,7 @@ public class Ship implements Serializable {
 		damage = sdamage;
 	}
 	public Ship create() {
-		return new Ship(player, this.getX(), this.getY(), this.getWidth(), this.getHeight(), this.getSpeed(), this.getCooldown(), this.getRange(), this.getDamage());
+		return new Ship(player, this.getX(), this.getY(), this.getWidth(), this.getHeight(), this.getSpeed(), this.getCooldown(), this.getRange(), this.getDamage(), this.getHealth());
 	}
 	public void become(Ship other) {
 		this.id = other.id;
@@ -62,8 +64,13 @@ public class Ship implements Serializable {
 	public void setTarget(Point newtarget) {
 		target = newtarget;
 	}
-	public void takeDamage(int dam) {
-		System.out.println("Ship "+id+" took "+dam+" damage");
+	public boolean takeDamage(int dam) {
+		System.out.println("Ship "+id+" took "+dam+" damage "+"                 "+cooldown);
+		health-=dam;
+		if(health<0) {
+			return true;
+		}
+		return false;
 	}
 	public boolean canShoot(Ship other) {
 		if(this.getDistanceFrom(other)<this.getRange()) {
@@ -92,7 +99,7 @@ public class Ship implements Serializable {
 		return bounds;
 	}
 	public Ship duplicate() {
-		return new Ship(player, x, y, width, height, speed, COOLDOWN, range, damage);
+		return new Ship(player, x, y, width, height, speed, COOLDOWN, range, damage, health);
 	}
 	public boolean hasTarget() {
 		return target!=null;
@@ -123,26 +130,6 @@ public class Ship implements Serializable {
 		this.x = r.x;
 		this.y = r.y;
 	}
-//	public void move() {
-//		if(target!=null) {
-//			double dx = (double)(target.x-gs.moveY();etX())*getSpeed()/100.0;
-//			double dy = (double)(target.y-getY())*getSpeed()/100.0;
-//			if(dx>1)
-//				dx = 1;
-//			if(dx<-1)
-//				dx = -1;
-//			if(dy>1) 
-//				dy=1;
-//			if(dy<-1)
-//				dy=-1;
-//			System.out.println("Ship "+this+" is moving to ("+(x+speed*dx)+","+(y+speed*dy)+")");
-//			x+=speed*dx;
-//			y+=speed*dy;
-//			if(Math.abs(target.x-x)<speed && Math.abs(target.y-y)<speed) {
-//				target = null;
-//			}
-//		}
-//	}
 	public boolean collides(Rectangle other) {
 		return this.getBounds().intersects(other);
 	}
@@ -159,6 +146,7 @@ public class Ship implements Serializable {
 		}
 		return false;
 	}
+	public int getHealth() { return health; }
 	public int getID() { return id; }
 	public int getDamage() { return damage; }
 	public int getRange() { return range; }
