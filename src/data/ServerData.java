@@ -11,4 +11,5 @@ public class ServerData implements Serializable{
 		String s = "IP="+ip+"\nRadius="+radius+"\nGamestarted="+gamestarted;
 		return s;
 	}
+	//asdf
 }

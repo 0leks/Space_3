@@ -7,4 +7,5 @@ public class PlayerConfirm implements Serializable{
 	public PlayerConfirm() {
 		msg="";
 	}
+	//asdf
 }

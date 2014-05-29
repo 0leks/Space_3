@@ -37,26 +37,6 @@ public class World{
 		gamedata = new GameData();
 		gametimer= new Timer(World.GAMETIMER, new ActionListener() {
 			@Override
-//			public void move() {
-//			if(target!=null) {
-//				double dx = (double)(target.x-gs.moveY();etX())*getSpeed()/100.0;
-//				double dy = (double)(target.y-getY())*getSpeed()/100.0;
-//				if(dx>1)
-//					dx = 1;
-//				if(dx<-1)
-//					dx = -1;
-//				if(dy>1) 
-//					dy=1;
-//				if(dy<-1)
-//					dy=-1;
-//				System.out.println("Ship "+this+" is moving to ("+(x+speed*dx)+","+(y+speed*dy)+")");
-//				x+=speed*dx;
-//				y+=speed*dy;
-//				if(Math.abs(target.x-x)<speed && Math.abs(target.y-y)<speed) {
-//					target = null;
-//				}
-//			}
-//		}
 			public void actionPerformed(ActionEvent e) {
 				for(int a=0; a<ships.size(); a++) {
 					Ship s = ships.get(a);
@@ -167,12 +147,27 @@ public class World{
 		}
 		return en;
 	}
+	/**
+	 * Checks whether Rectangle newpos collides with any other thing in the World except Ship s
+	 * @param s
+	 * @param newpos
+	 * @return true if collision, false, if clear
+	 */
 	public boolean collides(Ship s, Rectangle newpos) {
 		for(int a=0; a<ships.size(); a++) {
 			Ship sh = ships.get(a);
 			if(sh==null)
 				System.out.println("SH is null!!");
 			if(sh!=s && sh.collides(newpos)) {
+				return true;
+			}
+		}
+		for(int a=0; a<bases.size(); a++) {
+			Base ba = bases.get(a);
+			if(ba==null) {
+				System.out.println("BA is null!!");
+			}
+			if(ba.collides(newpos)) {
 				return true;
 			}
 		}
@@ -193,6 +188,7 @@ public class World{
 		sortedships.add(s);
 	}
 	public void sendGameData() {
+//		long cur = System.currentTimeMillis();
 		for(int a=0; a<bases.size(); a++) {
 			server.sendToAll(bases.get(a));
 		}
@@ -207,6 +203,9 @@ public class World{
 				ships.add(s);
 			}
 		}
+//		long now = System.currentTimeMillis();
+//		long took = now-cur;
+//		System.out.println("It took "+took+" milliseconds to send game data");
 //		for(int a=0; a<lasers.size(); a++) {
 //			
 //		}

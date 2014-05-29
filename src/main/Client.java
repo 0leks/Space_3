@@ -262,23 +262,27 @@ public class Client implements Runnable{
 			draw = new JPanel() {
 				@Override
 				public void paintComponent(Graphics g) {
+					super.paintComponent(g);
 					g.setColor(Color.black);
 					g.fillRect(0, 0, getWidth(), getHeight());
 					
 					for(int a=0; a<bases.size(); a++) {
 						Base b = bases.get(a);
 						g.setColor(b.getPlayer().color);
-						g.fillRect(b.getX()-lookingat.x-b.getWidth()/2, b.getY()-lookingat.y-b.getHeight()/2, b.getWidth(), b.getHeight());
+						g.fillRect(b.getX()-lookingat.x, b.getY()-lookingat.y, b.getWidth(), b.getHeight());
+//						g.fillRect(b.getX()-lookingat.x-b.getWidth()/2, b.getY()-lookingat.y-b.getHeight()/2, b.getWidth(), b.getHeight());
 					}
 					for(int a=0; a<explosions.size(); a++) {
 						Explosion e = explosions.get(a);
 						g.setColor(Color.orange);
-						g.fillOval(e.x-e.radius/2-lookingat.x, e.y-e.radius/2-lookingat.y, e.radius, e.radius);
+						g.fillOval(e.x-lookingat.x, e.y-lookingat.y, e.radius, e.radius);
+//						g.fillOval(e.x-e.radius/2-lookingat.x, e.y-e.radius/2-lookingat.y, e.radius, e.radius);
 					}
 					for(int a=0; a<ships.size(); a++) {
 						Ship b = ships.get(a);
 						g.setColor(b.getPlayer().color);
-						g.fillRect(b.getX()-lookingat.x-b.getWidth()/2, b.getY()-lookingat.y-b.getHeight()/2, b.getWidth(), b.getHeight());
+						g.fillRect(b.getX()-lookingat.x, b.getY()-lookingat.y, b.getWidth(), b.getHeight());
+//						g.fillRect(b.getX()-lookingat.x-b.getWidth()/2, b.getY()-lookingat.y-b.getHeight()/2, b.getWidth(), b.getHeight());
 					}
 					
 					for(int a=0; a<lasers.size(); a++) {

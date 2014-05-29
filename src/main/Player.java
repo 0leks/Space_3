@@ -16,4 +16,5 @@ public class Player implements Serializable{
 	public boolean equals(Player other) {
 		return other.color.equals(this.color);
 	}
+	//asdf
 }
