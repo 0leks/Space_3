@@ -67,6 +67,14 @@ public class Ship implements Serializable {
 	public boolean takeDamage(int dam) {
 		System.out.println("Ship "+id+" took "+dam+" damage "+"                 "+cooldown);
 		health-=dam;
+		width = health;
+		height = health;
+		if(width<0) {
+			width = 1;
+		}
+		if(height<0) {
+			height = 1;
+		}
 		if(health<0) {
 			return true;
 		}
@@ -152,8 +160,8 @@ public class Ship implements Serializable {
 	public int getRange() { return range; }
 	public int getCooldown() { return COOLDOWN; }
 	public int getSpeed() { return speed; }
-	public int getX() { return x; }
-	public int getY() { return y; }
+	private int getX() { return x; }
+	private int getY() { return y; }
 	public int getWidth() { return width; }
 	public int getHeight() { return height; }
 	public Player getPlayer() { return player; }

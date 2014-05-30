@@ -12,6 +12,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -217,7 +218,7 @@ public class Client implements Runnable{
 							if(s.dead) {
 								ships.remove(a);
 								System.out.println("Ship "+s.id+" was removed.");
-								Explosion ex = new Explosion(ship.getX(), ship.getY(), ship.getWidth()*3/2);
+								Explosion ex = new Explosion(ship.getBounds().x, ship.getBounds().y, ship.getWidth()*3/2);
 								explosions.add(ex);
 								break;
 							} else {
@@ -269,19 +270,23 @@ public class Client implements Runnable{
 					for(int a=0; a<bases.size(); a++) {
 						Base b = bases.get(a);
 						g.setColor(b.getPlayer().color);
-						g.fillRect(b.getX()-lookingat.x, b.getY()-lookingat.y, b.getWidth(), b.getHeight());
+						Rectangle r = b.getBounds();
+						g.fillRect(r.x-lookingat.x, r.y-lookingat.y, r.width, r.height);
+//						g.fillRect(b.getX()-lookingat.x, b.getY()-lookingat.y, b.getWidth(), b.getHeight());
 //						g.fillRect(b.getX()-lookingat.x-b.getWidth()/2, b.getY()-lookingat.y-b.getHeight()/2, b.getWidth(), b.getHeight());
 					}
 					for(int a=0; a<explosions.size(); a++) {
 						Explosion e = explosions.get(a);
 						g.setColor(Color.orange);
-						g.fillOval(e.x-lookingat.x, e.y-lookingat.y, e.radius, e.radius);
-//						g.fillOval(e.x-e.radius/2-lookingat.x, e.y-e.radius/2-lookingat.y, e.radius, e.radius);
+//						g.fillOval(e.x-lookingat.x, e.y-lookingat.y, e.radius, e.radius);
+						g.fillOval(e.x-e.radius/2-lookingat.x, e.y-e.radius/2-lookingat.y, e.radius, e.radius);
 					}
 					for(int a=0; a<ships.size(); a++) {
 						Ship b = ships.get(a);
 						g.setColor(b.getPlayer().color);
-						g.fillRect(b.getX()-lookingat.x, b.getY()-lookingat.y, b.getWidth(), b.getHeight());
+						Rectangle r = b.getBounds();
+						g.fillRect(r.x-lookingat.x, r.y-lookingat.y, r.width, r.height);
+//						g.fillRect(b.getX()-lookingat.x, b.getY()-lookingat.y, b.getWidth(), b.getHeight());
 //						g.fillRect(b.getX()-lookingat.x-b.getWidth()/2, b.getY()-lookingat.y-b.getHeight()/2, b.getWidth(), b.getHeight());
 					}
 					
@@ -309,7 +314,7 @@ public class Client implements Runnable{
 							if(ratio>.9) {
 								g.setColor(new Color((int)(from.getPlayer().color.getRed()*ratio), (int)(from.getPlayer().color.getGreen()*ratio), (int)(from.getPlayer().color.getBlue()*ratio)));
 	//							g.setColor(from.getPlayer().color);
-								g.drawLine(from.getX()-lookingat.x, from.getY()-lookingat.y, to.getX()-lookingat.x, to.getY()-lookingat.y);
+								g.drawLine(from.getBounds().x-lookingat.x, from.getBounds().y-lookingat.y, to.getBounds().x-lookingat.x, to.getBounds().y-lookingat.y);
 							}
 //							}
 						}
@@ -320,6 +325,29 @@ public class Client implements Runnable{
 			};
 			draw.setBackground(Color.black);
 			this.add(draw, BorderLayout.CENTER);
+			this.addMouseMotionListener(new MouseMotionListener() {
+				@Override
+				public void mouseDragged(MouseEvent arg0) {
+					mouseMoved(arg0);
+				}
+				@Override
+				public void mouseMoved(MouseEvent e) {
+					if(e.getX()<20) {
+						cameradx = -1;
+					} else if(e.getX()>getWidth()-20) {
+						cameradx = 1;
+					} else {
+						cameradx = 0;
+					}
+					if(e.getY()<20) {
+						camerady = -1;
+					} else if(e.getY()>getHeight()-20) {
+						camerady = 1;
+					} else {
+						camerady = 0;
+					}
+				}
+			});
 			this.addKeyListener(new KeyListener() {
 				@Override
 				public void keyPressed(KeyEvent e) {
@@ -368,14 +396,14 @@ public class Client implements Runnable{
 						send(s);
 						System.out.println("Sending Ship:"+s.toString());
 					} else if(e.getButton()==MouseEvent.BUTTON2) {
-						for(int a=x-200; a<=x+200; a+=FREQ) {
-							for(int b=y-200; b<=y+200; b+=FREQ) {
-								int cd = (int)(Math.random()*100+50);
-								Ship s = new Ship(thisplayer, a, b, 20, 20, 10, cd, 2150, 10, 30);
-								send(s);
-								System.out.println("Sending Ship:"+s.toString());
-							}
-						}
+//						for(int a=x-200; a<=x+200; a+=FREQ) {
+//							for(int b=y-200; b<=y+200; b+=FREQ) {
+//								int cd = (int)(Math.random()*100+50);
+//								Ship s = new Ship(thisplayer, a, b, 20, 20, 10, cd, 2150, 10, 30);
+//								send(s);
+//								System.out.println("Sending Ship:"+s.toString());
+//							}
+//						}
 					} else if(e.getButton()==MouseEvent.BUTTON3) {
 						Command c = new Command(Command.MOVE, x, y);
 						send(c);

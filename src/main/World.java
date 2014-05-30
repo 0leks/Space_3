@@ -67,6 +67,18 @@ public class World{
 					}
 //					ships.get(a).move();
 				}
+				for(int a=0; a<bases.size(); a++) {
+					Base b = bases.get(a);
+					b.tic();
+					if(b.ready()) {
+						Ship spawn = b.getShip();
+						Rectangle bounds = getSpace(spawn, b);
+						System.out.println(bounds);
+						spawn.setPos(bounds);
+						addShip(spawn);
+						b.resetTimer();
+					}
+				}
 				for(int a=0; a<lasers.size(); a++) {
 					Laser l = lasers.get(a);
 					if(l.widen()) {
@@ -86,6 +98,42 @@ public class World{
 				sendGameData();
 			}
 		});
+	}
+	public Rectangle getSpace(Ship spawn, Base base) {
+		int a=0;
+		int b = 0;
+		Rectangle bounds = new Rectangle(0, 0, spawn.getWidth(), spawn.getHeight());
+		for(int asdf = 1; asdf<10; asdf++) {
+			bounds.y = base.getY()-spawn.getHeight()*asdf;
+			for(a=base.getX()-spawn.getWidth()*asdf; a<=base.getX()+base.getWidth()+spawn.getWidth()*(asdf-1); a+=5) {
+				bounds.x = a;
+				if(!collides(spawn, bounds)) {
+					return bounds;
+				}
+			}
+			bounds.x = base.getX()+base.getWidth()+spawn.getWidth()*(asdf-1);
+			for(a=base.getY()-spawn.getHeight()*asdf; a<=base.getY()+base.getHeight()+spawn.getHeight()*(asdf-1); a+=5) {
+				bounds.y = a;
+				if(!collides(spawn, bounds)) {
+					return bounds;
+				}
+			}
+			bounds.y = base.getY()+base.getHeight()+spawn.getHeight()*(asdf-1);
+			for(a=base.getX()+base.getWidth()+spawn.getWidth()*(asdf-1); a>=base.getX()-spawn.getWidth()*asdf; a-=5) {
+				bounds.x = a;
+				if(!collides(spawn, bounds)) {
+					return bounds;
+				}
+			}
+			bounds.x = base.getX()-spawn.getWidth()*asdf;
+			for(a=base.getY()+base.getHeight()+spawn.getHeight()*(asdf-1); a>=base.getY()-spawn.getHeight()*asdf; a-=5) {
+				bounds.y = a;
+				if(!collides(spawn, bounds)) {
+					return bounds;
+				}
+			}
+		}
+		return null;
 	}
 	public void removeShip(Ship s) {
 		System.out.println("Removing Ship "+s.getID());
@@ -224,7 +272,7 @@ public class World{
 		int playerindex = 0;
 		for(double rad = 0; rad<2*Math.PI && playerindex<numbases; rad = rad+radperbase, playerindex++) {
 			int[] center = polartorect(radius-40, rad);
-			Base b = new Base(players.get(playerindex), center[0], center[1], 40, 40);
+			Base b = new Base(players.get(playerindex), center[0], center[1], 80, 80);
 			bases.add(b);
 		}
 	}

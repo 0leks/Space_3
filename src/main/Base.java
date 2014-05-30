@@ -8,6 +8,15 @@ public class Base implements Serializable{
 	private int width, height;
 	private Rectangle bounds;
 	private Player player;
+	private int timetospawn;
+	private int TIMETOSPAWN;
+	private int HEALTH;
+	private int DAMAGE;
+	private int SPEED;
+	private int SHOOTINGSPEED;
+	private int RANGE;
+	private int WIDTH;
+	
 	public int id;
 	public static int sid;
 	public Base(Player mine, int sx, int sy, int sw, int sh) {
@@ -16,8 +25,31 @@ public class Base implements Serializable{
 		y = sy;
 		width = sw;
 		height = sh;
+		HEALTH = 10;
+		DAMAGE = 1;
+		SPEED = 10;
+		SHOOTINGSPEED = 10;
+		RANGE = 100;
+		WIDTH = 20;
+		TIMETOSPAWN = 5;
+		timetospawn = 0;
 		bounds = new Rectangle(x, y, width, height);
 		player = mine;
+	}
+	public void resetTimer() {
+		timetospawn = 0;
+	}
+	public void tic() {
+		timetospawn++;
+	}
+	public boolean ready() {
+		if(timetospawn>TIMETOSPAWN) {
+			return true;
+		}
+		return false;
+	}
+	public Ship getShip() {
+		return new Ship(this.getPlayer(), 0, 0, WIDTH, WIDTH, SPEED, SHOOTINGSPEED, RANGE, DAMAGE, HEALTH);
 	}
 	public String toString() {
 		return player+","+x+","+y+","+width+","+height;
