@@ -60,7 +60,8 @@ public class World{
 						if(en!=null && s.canShoot(en)) {
 							s.shot();
 							Laser l = new Laser(s.getID(), en.getID(), s.getCooldown()-4, s.getDamage());
-							System.out.println("Ship "+s.getID()+" Shooting at "+en.getID()+" cd:"+en.getCooldown()+"                 "+s.cooldown);
+							l.source = s.source;
+//							System.out.println("Ship "+s.getID()+" Shooting at "+en.getID()+" cd:"+en.getCooldown()+"                 "+s.cooldown);
 							lasers.add(l);
 							server.sendToAll(l);
 						}
@@ -89,6 +90,10 @@ public class World{
 						if(en!=null) {
 							if(en.takeDamage(l.damage)) {
 								removeShip(en);
+								Base b = l.source;
+								if(b!=null) {
+									b.addMoney(en.getLoot());
+								}
 							}
 						}
 						lasers.remove(a--);

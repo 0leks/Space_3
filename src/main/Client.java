@@ -14,6 +14,8 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -63,6 +65,7 @@ public class Client implements Runnable{
 	private int cameradx, camerady;
 	public ArrayList<Rectangle> target;
 	public Timer tim;
+	private int money;
 	public Client() {
 		buttons = new ArrayList<Button>();
 		target = new ArrayList<Rectangle>();
@@ -132,6 +135,18 @@ public class Client implements Runnable{
 				super.paint(g);
 			}
 		});
+	}
+	public void disconnect() {
+		System.out.println("Disconnecting");
+		send(new Disconnect());
+		try {
+			hostin.close();
+			hostout.close();
+			changeFrame();
+			System.exit(0);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 	}
 	public static void main(String[] args) {
 		Client c = new Client();
@@ -248,6 +263,9 @@ public class Client implements Runnable{
 					for(int a=0; a<bases.size(); a++) {
 						if(bases.get(a).id==s.id) {
 							bases.get(a).become(s);
+							if(s.getPlayer().equals(thisplayer)) {
+								money = s.getMoney();
+							}
 //							bases.remove(a);
 //							bases.add(s);
 							added = true;
@@ -312,6 +330,12 @@ public class Client implements Runnable{
 		public Timer gametimer;
 		public GameFrame() {
 			this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			this.addWindowListener(new WindowAdapter() {
+				public void windowClosing(WindowEvent e) {
+					disconnect();
+					System.exit(0);
+				}
+			});
 			this.setSize(Toolkit.getDefaultToolkit().getScreenSize());
 			this.setUndecorated(true);
 			draw = new JPanel() {
@@ -409,7 +433,8 @@ public class Client implements Runnable{
 					g.setFont(new Font("Courrier", Font.PLAIN, 30));
 					g.setColor(Color.white);
 					g.drawString((lookingat.x+mouse.x)+","+(lookingat.y+mouse.y), 10, 30);
-					
+					g.setFont(new Font("Courrier", Font.PLAIN, 50));
+					g.drawString(money+"", 10, getHeight()-10);
 				}
 			};
 			draw.setBackground(Color.black);
@@ -459,16 +484,11 @@ public class Client implements Runnable{
 					if(k==KeyEvent.VK_RIGHT) {
 						cameradx = 1;
 					}
+					if(k==KeyEvent.VK_R) {
+						initializeButtons();
+					}
 					if(k==KeyEvent.VK_ESCAPE) {
-						send(new Disconnect());
-						try {
-							hostin.close();
-							hostout.close();
-							changeFrame();
-							System.exit(0);
-						} catch (IOException e1) {
-							e1.printStackTrace();
-						}
+						disconnect();
 					}
 				}
 				@Override
@@ -498,7 +518,8 @@ public class Client implements Runnable{
 					int y = e.getY()+lookingat.y;
 					mouse = e.getPoint();
 					if(e.getButton()==MouseEvent.BUTTON1) {
-						for(Button b : buttons) {
+						for(int a=0; a<buttons.size(); a++) {
+							Button b = buttons.get(a);
 							if(b.bounds.contains(mouse)) {
 								press = b;
 							}

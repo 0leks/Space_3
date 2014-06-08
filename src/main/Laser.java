@@ -8,6 +8,7 @@ public class Laser implements Serializable{
 	public int width;
 	public int ttl;
 	public int damage;
+	public transient Base source;
 	public Laser(int f, int t, int tt, int sdamage) {
 		from = f;
 		to = t;

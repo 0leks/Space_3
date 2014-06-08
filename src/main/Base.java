@@ -19,6 +19,7 @@ public class Base implements Serializable{
 	private int SHOOTINGSPEED;
 	private int RANGE;
 	private int WIDTH;
+	private int money;
 	public int id;
 	public static int sid;
 	public Base(Player mine, int sx, int sy, int sw, int sh) {
@@ -31,12 +32,13 @@ public class Base implements Serializable{
 		DAMAGE = 1;
 		SPEED = 10;
 		SHOOTINGSPEED = 10;
-		RANGE = 100;
+		RANGE = 200;
 		WIDTH = 20;
 		TIMETOSPAWN = 5;
 		timetospawn = 0;
 		bounds = new Rectangle(x, y, width, height);
 		player = mine;
+		money = 0;
 	}
 	public void upgrade(Upgrade upgrade) {
 		int t = upgrade.type;
@@ -75,7 +77,9 @@ public class Base implements Serializable{
 		return false;
 	}
 	public Ship getShip() {
-		return new Ship(this.getPlayer(), 0, 0, WIDTH, WIDTH, SPEED, SHOOTINGSPEED, RANGE, DAMAGE, HEALTH);
+		Ship s = new Ship(this.getPlayer(), 0, 0, WIDTH, WIDTH, SPEED, SHOOTINGSPEED, RANGE, DAMAGE, HEALTH);
+		s.source = this;
+		return s;
 	}
 	public String toString() {
 		return player+","+x+","+y+","+width+","+height;
@@ -101,6 +105,10 @@ public class Base implements Serializable{
 		bounds.height = height;
 		return bounds;
 	}
+	public void addMoney(int add) {
+		money += add;
+	}
+	public int getMoney() { return money; }
 	public int getX() { return x; }
 	public int getY() { return y; }
 	public int getWidth() { return width; }

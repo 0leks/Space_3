@@ -23,12 +23,15 @@ public class Ship implements Serializable {
 	private int range;
 	private int damage;
 	private int health;
+	private int loot;
+	public transient Base source;
 	public Ship(Player mine, int sx, int sy, int sw, int sh, int sspeed, int scooldown, int srange, int sdamage, int shealth) {
 		health = shealth;
 		range = srange;
 		COOLDOWN = scooldown;
 		cooldown = 0;
 		id = sid++;
+		loot = 1;
 		x = sx;
 		y = sy;
 		width = sw;
@@ -65,16 +68,16 @@ public class Ship implements Serializable {
 		target = newtarget;
 	}
 	public boolean takeDamage(int dam) {
-		System.out.println("Ship "+id+" took "+dam+" damage "+"                 "+cooldown);
+//		System.out.println("Ship "+id+" took "+dam+" damage "+"                 "+cooldown);
 		health-=dam;
-		width = health;
-		height = health;
-		if(width<0) {
-			width = 1;
-		}
-		if(height<0) {
-			height = 1;
-		}
+//		width = health;
+//		height = health;
+//		if(width<0) {
+//			width = 1;
+//		}
+//		if(height<0) {
+//			height = 1;
+//		}
 		if(health<0) {
 			return true;
 		}
@@ -145,7 +148,7 @@ public class Ship implements Serializable {
 		return this.getBounds().intersects(other.getBounds());
 	}
 	public int getDistanceFrom(Ship other) {
-		int dist = Math.abs(other.getY()-this.getY()+other.getX()-this.getX());
+		int dist = Math.abs(other.getY()-this.getY())+Math.abs(other.getX()-this.getX());
 		return dist;
 	}
 	public boolean laserReady() {
@@ -154,6 +157,7 @@ public class Ship implements Serializable {
 		}
 		return false;
 	}
+	public int getLoot() { return loot; }
 	public int getHealth() { return health; }
 	public int getID() { return id; }
 	public int getDamage() { return damage; }

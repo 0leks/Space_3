@@ -6,6 +6,8 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -165,6 +167,12 @@ public class Server implements Runnable {
 		public WorldFrame() {
 			this.setSize(500, 500);
 			this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			this.addWindowListener(new WindowAdapter() {
+				public void windowClosing(WindowEvent e) {
+					System.out.println("Closing Server");
+					System.exit(0);
+				}
+			});
 			title = "Server at ";
 			try {
 				title += InetAddress.getLocalHost().getHostAddress()+":";
