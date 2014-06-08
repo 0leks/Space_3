@@ -56,6 +56,11 @@ public class Server implements Runnable {
 		});
 		serverdata = new ServerData();
 	}
+	public ServerData getServerData() {
+		serverdata.players = worldframe.players.getText();
+		serverdata.radius = World.getRadius(selectedworldsize);
+		return serverdata;
+	}
 	public void playerMoveCommand(Player p, int x, int y) {
 		world.playerMoveCommand(p, x, y);
 	}
@@ -98,6 +103,13 @@ public class Server implements Runnable {
 	}
 	public void detach(Connection c) {
 		connections.remove(c);
+		try {
+			c.in.close();
+			c.out.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		System.out.println(c.player+" was detached");
 	}
 	@Override

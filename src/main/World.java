@@ -73,10 +73,13 @@ public class World{
 					if(b.ready()) {
 						Ship spawn = b.getShip();
 						Rectangle bounds = getSpace(spawn, b);
-						System.out.println(bounds);
-						spawn.setPos(bounds);
-						addShip(spawn);
-						b.resetTimer();
+						if(bounds==null) {
+//							System.out.println("Not enough space to spawn.");
+						} else {
+							spawn.setPos(bounds);
+							addShip(spawn);
+							b.resetTimer();
+						}
 					}
 				}
 				for(int a=0; a<lasers.size(); a++) {
@@ -103,7 +106,7 @@ public class World{
 		int a=0;
 		int b = 0;
 		Rectangle bounds = new Rectangle(0, 0, spawn.getWidth(), spawn.getHeight());
-		for(int asdf = 1; asdf<10; asdf++) {
+		for(int asdf = 1; asdf<5; asdf++) {
 			bounds.y = base.getY()-spawn.getHeight()*asdf;
 			for(a=base.getX()-spawn.getWidth()*asdf; a<=base.getX()+base.getWidth()+spawn.getWidth()*(asdf-1); a+=5) {
 				bounds.x = a;
@@ -225,13 +228,13 @@ public class World{
 		for(int a=0; a<sortedships.size(); a++) {
 			Ship s = sortedships.get(a);
 			if(s.getPlayer().equals(p)) {
-				System.out.println("Setting move target of Ship "+s+" to ("+x+","+y+")");
+//				System.out.println("Setting move target of Ship "+s+" to ("+x+","+y+")");
 				s.setTarget(new Point(x, y));
 			}
 		}
 	}
 	public void addShip(Ship s) {
-		System.out.println("Adding Ship:"+s.toString());
+//		System.out.println("Adding Ship:"+s.toString());
 		ships.add(s);
 		sortedships.add(s);
 	}

@@ -2,6 +2,7 @@ package main;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -29,12 +30,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.Timer;
 
-import data.Command;
-import data.GameData;
-import data.PlayerConfirm;
-import data.RemoveLaser;
-import data.ServerData;
-import data.ShipData;
+import data.*;
 
 public class Client implements Runnable{
 	Socket socket;
@@ -48,15 +44,19 @@ public class Client implements Runnable{
 	String message2;
 	boolean nameconfirmed;
 	boolean colorconfirmed;
+	boolean SERVERERROR;
 	ServerData currentserverdata;
 	ConnectFrame connectframe;
 	GameFrame gameframe;
 	public boolean startclient;
+	private Button press;
+	private ArrayList<Button> buttons;
 	private ArrayList<Base> bases;
 	private ArrayList<Ship> ships;
 	private ArrayList<Laser> lasers;
 	private ArrayList<Explosion> explosions;
 	Point lookingat;
+	Point mouse;
 	boolean zoomtobase;
 	public static final int CAMERASPEED = 20;
 	public int FREQ = 21;
@@ -64,6 +64,7 @@ public class Client implements Runnable{
 	public ArrayList<Rectangle> target;
 	public Timer tim;
 	public Client() {
+		buttons = new ArrayList<Button>();
 		target = new ArrayList<Rectangle>();
 		bases = new ArrayList<Base>();
 		ships = new ArrayList<Ship>();
@@ -76,7 +77,61 @@ public class Client implements Runnable{
 	    connectframe = new ConnectFrame();
 	    gameframe = new GameFrame();
 	    lookingat = new Point(0,0);
+	    mouse = new Point(0,0);
 	    zoomtobase = true;
+	    initializeButtons();
+	}
+	public void initializeButtons() {
+		buttons.clear();
+		int startx = 10;
+		int dx = 0;
+		int starty = 40;
+		int dy = 50;
+		int width = 100;
+		int height = 40;
+		starty-=dy;
+		buttons.add(new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(Upgrade.DAMAGE)) {
+			@Override
+			public void paint(Graphics g) {
+				g.setColor(Color.blue);
+				super.paint(g);
+			}
+		});
+		buttons.add(new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(Upgrade.HEALTH)) {
+			@Override
+			public void paint(Graphics g) {
+				g.setColor(Color.red);
+				super.paint(g);
+			}
+		});
+		buttons.add(new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(Upgrade.RANGE)) {
+			@Override
+			public void paint(Graphics g) {
+				g.setColor(Color.GRAY);
+				super.paint(g);
+			}
+		});
+		buttons.add(new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(Upgrade.SHOOTINGSPEED)) {
+			@Override
+			public void paint(Graphics g) {
+				g.setColor(Color.YELLOW);
+				super.paint(g);
+			}
+		});
+		buttons.add(new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(Upgrade.SPEED)) {
+			@Override
+			public void paint(Graphics g) {
+				g.setColor(Color.ORANGE);
+				super.paint(g);
+			}
+		});
+		buttons.add(new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(Upgrade.TIMETOSPAWN)) {
+			@Override
+			public void paint(Graphics g) {
+				g.setColor(Color.CYAN);
+				super.paint(g);
+			}
+		});
 	}
 	public static void main(String[] args) {
 		Client c = new Client();
@@ -158,9 +213,6 @@ public class Client implements Runnable{
 		while(true) {
 			try {
 				Object read = hostin.readUnshared();
-				if(read instanceof World) {
-					
-				}
 				if(read instanceof PlayerConfirm) {
 					String str = ((PlayerConfirm)read).msg;
 					message2 = str;
@@ -249,11 +301,13 @@ public class Client implements Runnable{
 				e.printStackTrace();
 			} catch (IOException e) {
 				connectframe.addText(e.getMessage()+" ("+ip+":"+port+")\n");
-				e.printStackTrace();
+				SERVERERROR = true;
+//				e.printStackTrace();
 			}
 		}
 	}
 	public class GameFrame extends JFrame {
+		private static final long serialVersionUID = 1L;
 		public JPanel draw;
 		public Timer gametimer;
 		public GameFrame() {
@@ -261,12 +315,41 @@ public class Client implements Runnable{
 			this.setSize(Toolkit.getDefaultToolkit().getScreenSize());
 			this.setUndecorated(true);
 			draw = new JPanel() {
+				private static final long serialVersionUID = 1L;
 				@Override
 				public void paintComponent(Graphics g) {
+					// TODO Paint Component Method
 					super.paintComponent(g);
 					g.setColor(Color.black);
 					g.fillRect(0, 0, getWidth(), getHeight());
-					
+					if(SERVERERROR) {
+						g.setFont(new Font("Courrier", Font.PLAIN, 120));
+						int half = getHeight()/2;
+						int delta = 5;
+						int total = 51;
+						int net = delta*total;
+						boolean right = true;
+						int tic = 0 ;
+						int x = 350;
+						for(int a=0; a<=total; a+=1) {
+							int m = delta*a;
+							g.setColor(new Color(m, m, m));
+							if(right) {
+								x+=delta;
+							} else {
+								x-=delta;
+							}
+							if(tic++>7) {
+								if(Math.random()<.95) {
+									right = !right;
+									tic = 0;
+								}
+							}
+							g.drawString("SERVER ERROR", x, half-net+m);
+						}
+						g.setColor(thisplayer.color);
+						g.drawString("SERVER ERROR", x, half);
+					}
 					for(int a=0; a<bases.size(); a++) {
 						Base b = bases.get(a);
 						g.setColor(b.getPlayer().color);
@@ -319,8 +402,14 @@ public class Client implements Runnable{
 //							}
 						}
 					}
+					for(int a=0; a<buttons.size(); a++) {
+						Button b = buttons.get(a);
+						b.paint(g);
+					}
+					g.setFont(new Font("Courrier", Font.PLAIN, 30));
 					g.setColor(Color.white);
-					g.drawString(lookingat.x+","+lookingat.y, 10, 30);
+					g.drawString((lookingat.x+mouse.x)+","+(lookingat.y+mouse.y), 10, 30);
+					
 				}
 			};
 			draw.setBackground(Color.black);
@@ -328,10 +417,16 @@ public class Client implements Runnable{
 			this.addMouseMotionListener(new MouseMotionListener() {
 				@Override
 				public void mouseDragged(MouseEvent arg0) {
+					Point currentmouse = mouse.getLocation();
 					mouseMoved(arg0);
+					if(press!=null) {
+						press.bounds.x+=mouse.x-currentmouse.x;
+						press.bounds.y+=mouse.y-currentmouse.y;
+					}
 				}
 				@Override
 				public void mouseMoved(MouseEvent e) {
+					mouse = e.getPoint();
 					if(e.getX()<20) {
 						cameradx = -1;
 					} else if(e.getX()>getWidth()-20) {
@@ -364,6 +459,17 @@ public class Client implements Runnable{
 					if(k==KeyEvent.VK_RIGHT) {
 						cameradx = 1;
 					}
+					if(k==KeyEvent.VK_ESCAPE) {
+						send(new Disconnect());
+						try {
+							hostin.close();
+							hostout.close();
+							changeFrame();
+							System.exit(0);
+						} catch (IOException e1) {
+							e1.printStackTrace();
+						}
+					}
 				}
 				@Override
 				public void keyReleased(KeyEvent e) {
@@ -390,11 +496,17 @@ public class Client implements Runnable{
 				public void mousePressed(MouseEvent e) {
 					int x = e.getX()+lookingat.x;
 					int y = e.getY()+lookingat.y;
+					mouse = e.getPoint();
 					if(e.getButton()==MouseEvent.BUTTON1) {
-						int cd = (int)(Math.random()*100+50);
-						Ship s = new Ship(thisplayer, x, y, 20, 20, 10, cd, 1250, 10, 30);
-						send(s);
-						System.out.println("Sending Ship:"+s.toString());
+						for(Button b : buttons) {
+							if(b.bounds.contains(mouse)) {
+								press = b;
+							}
+						}
+//						int cd = (int)(Math.random()*100+50);
+//						Ship s = new Ship(thisplayer, x, y, 20, 20, 10, cd, 1250, 10, 30);
+//						send(s);
+//						System.out.println("Sending Ship:"+s.toString());
 					} else if(e.getButton()==MouseEvent.BUTTON2) {
 //						for(int a=x-200; a<=x+200; a+=FREQ) {
 //							for(int b=y-200; b<=y+200; b+=FREQ) {
@@ -412,7 +524,7 @@ public class Client implements Runnable{
 				}
 				@Override
 				public void mouseReleased(MouseEvent arg0) {
-					
+					press = null;
 				}
 				@Override
 				public void mouseClicked(MouseEvent arg0) {}
@@ -444,6 +556,10 @@ public class Client implements Runnable{
 		}
 	}
 	public class ConnectFrame extends JFrame {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		JPanel panel;
 		JTextField ipaddress;
 		JTextField portbox;
@@ -458,6 +574,11 @@ public class Client implements Runnable{
 			this.setSize(500, 500);
 			this.setTitle("Client");
 			panel = new JPanel() {
+				/**
+				 * 
+				 */
+				private static final long serialVersionUID = 1L;
+
 				@Override
 				public void paintComponent(Graphics g) {
 					super.paintComponent(g);
@@ -497,9 +618,12 @@ public class Client implements Runnable{
 			usernamebox.setSize(250, 30);
 			usernamebox.setLocation(20, 80);
 			panel.add(usernamebox);
-			redbox = new JTextField(""+(int)(Math.random()*25)*10);
-			greenbox = new JTextField(""+(int)(Math.random()*25)*10);
-			bluebox = new JTextField(""+(int)(Math.random()*25)*10);
+//			redbox = new JTextField(""+(int)(Math.random()*25)*10);
+//			greenbox = new JTextField(""+(int)(Math.random()*25)*10);
+//			bluebox = new JTextField(""+(int)(Math.random()*25)*10);
+			redbox = new JTextField(""+50);
+			greenbox = new JTextField(""+100);
+			bluebox = new JTextField(""+150);
 			redbox.addKeyListener(new KeyListener() {
 				@Override
 				public void keyPressed(KeyEvent e) {

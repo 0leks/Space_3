@@ -3,7 +3,10 @@ package main;
 import java.awt.Rectangle;
 import java.io.Serializable;
 
+import data.Upgrade;
+
 public class Base implements Serializable{
+	private static final long serialVersionUID = 1L;
 	private int x, y;
 	private int width, height;
 	private Rectangle bounds;
@@ -16,7 +19,6 @@ public class Base implements Serializable{
 	private int SHOOTINGSPEED;
 	private int RANGE;
 	private int WIDTH;
-	
 	public int id;
 	public static int sid;
 	public Base(Player mine, int sx, int sy, int sw, int sh) {
@@ -35,6 +37,30 @@ public class Base implements Serializable{
 		timetospawn = 0;
 		bounds = new Rectangle(x, y, width, height);
 		player = mine;
+	}
+	public void upgrade(Upgrade upgrade) {
+		int t = upgrade.type;
+		if(t==Upgrade.DAMAGE) {
+			DAMAGE+=1;
+		} else if(t==Upgrade.HEALTH) {
+			HEALTH+=1;
+		} else if(t==Upgrade.RANGE) {
+			RANGE+=1;
+		} else if(t==Upgrade.SHOOTINGSPEED) {
+			//needs rebalancing
+			SHOOTINGSPEED-=1;
+			if(SHOOTINGSPEED<=0) {
+				SHOOTINGSPEED = 1;
+			}
+		} else if(t==Upgrade.SPEED) {
+			SPEED+=1;
+		} else if(t==Upgrade.TIMETOSPAWN) {
+			//needs rebalancing
+			TIMETOSPAWN-=1;
+			if(TIMETOSPAWN<=0) {
+				TIMETOSPAWN = 1;
+			}
+		}
 	}
 	public void resetTimer() {
 		timetospawn = 0;
