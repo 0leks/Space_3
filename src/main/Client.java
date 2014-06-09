@@ -347,7 +347,7 @@ public class Client implements Runnable{
 					g.setColor(Color.black);
 					g.fillRect(0, 0, getWidth(), getHeight());
 					if(SERVERERROR) {
-						g.setFont(new Font("Courrier", Font.PLAIN, 120));
+						g.setFont(new Font("Courier", Font.BOLD, 120));
 						int half = getHeight()/2;
 						int delta = 5;
 						int total = 51;
@@ -430,10 +430,10 @@ public class Client implements Runnable{
 						Button b = buttons.get(a);
 						b.paint(g);
 					}
-					g.setFont(new Font("Courrier", Font.PLAIN, 30));
+					g.setFont(new Font("Courier", Font.BOLD, 30));
 					g.setColor(Color.white);
 					g.drawString((lookingat.x+mouse.x)+","+(lookingat.y+mouse.y), 10, 30);
-					g.setFont(new Font("Courrier", Font.PLAIN, 50));
+					g.setFont(new Font("Courier", Font.BOLD, 50));
 					g.drawString(money+"", 10, getHeight()-10);
 				}
 			};
