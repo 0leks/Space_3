@@ -93,32 +93,12 @@ public class Client implements Runnable{
 		int len = servererrordraw[0].length-1;
 		servererrordraw[1][len]+=shift*direction;
 		int x = servererrordraw[1][len];
-		if(x>650) {
+		if(x>1050) {
 			direction = -1;
 		}
-		if(x<200) {
+		if(x<1) {
 			direction = 1;
 		}
-//		for(int a=servererrordraw[0].length-servererrordraw[0].length/5; a<servererrordraw[0].length; a++) {
-//			if(Math.random()<.01) {
-//				shift+=direction*2;
-//			}
-//			if(Math.random()<.01) {
-//				shift+=(direction+1)*2;
-//			}
-//			if(Math.random()<.01) {
-//				shift+=(direction-1)*2;
-//			}
-//			servererrordraw[1][a]+=shift;
-//			int x = servererrordraw[1][a];
-//			if(x>650) {
-//				direction = -1;
-//			}
-//			if(x<200) {
-//				direction = 1;
-//			}
-//		}
-		
 		for(int a=1; a<servererrordraw[0].length; a++) {
 			if(servererrordraw[1][a]>servererrordraw[1][a-1]+(servererrordraw[0].length-a)/4) {
 				servererrordraw[1][a-1]+=1;
@@ -142,22 +122,17 @@ public class Client implements Runnable{
 		for(int a=0; a<=total; a++) {
 			int m = delta*a;
 			servererrordraw[0][a] = m;
-			System.out.println(m);
-//			g.setColor(new Color(m, m, m));
 			if(right) {
 				x+=delta;
 			} else {
 				x-=delta;
 			}
 			if(tic++>7) {
-//				if(Math.random()<.95) {
-					right = !right;
-					tic = 0;
-//				}
+				right = !right;
+				tic = 0;
 			}
 			servererrordraw[1][a] = x;
 			servererrordraw[2][a] = half-net+m;
-//			g.drawString("SERVER ERROR", x, half-net+m);
 		}
 		SERVERERROR = true;
 	}
@@ -169,8 +144,7 @@ public class Client implements Runnable{
 		int dy = 50;
 		int width = 100;
 		int height = 40;
-		starty-=dy;//TIMETOSPAWN, HEALTH, DAMAGE, SPEED, SHOOTINGSPEED, RANGE;
-
+		starty-=dy;
 		buttons[0] = new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.TIMETOSPAWN, 1)) {
 			@Override
 			public void paint(Graphics g) {
@@ -274,6 +248,8 @@ public class Client implements Runnable{
 					System.out.println("Sending :"+thisplayer);
 					send(thisplayer);
 					connectframe.start.setText("Update");
+					connectframe.portbox.setEnabled(false);
+					connectframe.ipaddress.setEnabled(false);
 					connectframe.setTitle(connectframe.getTitle()+" connected to ("+ip+":"+port+")");
 					read();
 				} catch (UnknownHostException e) {
@@ -326,16 +302,6 @@ public class Client implements Runnable{
 					connectframe.serverplayers.setText(currentserverdata.players);
 					connectframe.serverdata.setText(currentserverdata.getServerData());
 				}
-				if(read instanceof RemoveLaser) {
-//					RemoveLaser rl = (RemoveLaser)read;
-//					for(int a=lasers.size()-1; a>=0; a--) {
-//						if(lasers.get(a).from==rl.l.from) {
-//							lasers.remove(a);
-//							System.out.println("Removing Laser! because ship died");
-//						}
-//					}
-					// comented this out temporarily to avoid null pointer exceptions.
-				}
 				if(read instanceof Base) {
 					Base s = (Base)read;
 					boolean added = false;
@@ -345,14 +311,6 @@ public class Client implements Runnable{
 							if(s.getPlayer().equals(thisplayer)) {
 								money = s.getMoney();
 							}
-//							int[] upgrades = s.getUpgrades();
-//							for(int b=0; b<upgrades.length; b++) {
-//								buttons[b].setLevel(upgrades[b]);
-////								System.out.println(upgrades[b]);
-//							}
-//							System.out.println("Updating upgrades");
-//							bases.remove(a);
-//							bases.add(s);
 							added = true;
 							break;
 						}
@@ -395,8 +353,6 @@ public class Client implements Runnable{
 					for(int a=0; a<ships.size(); a++) {
 						if(ships.get(a).getID()==s.getID()) {
 							ships.get(a).become(s);
-//							ships.remove(a);
-//							ships.add(s);
 							added = true;
 							break;
 						}
@@ -412,7 +368,6 @@ public class Client implements Runnable{
 				connectframe.addText(e.getMessage()+" ("+ip+":"+port+")\n");
 				initializeServerErrorDraw();
 				updateServerErrorDraw();
-//				e.printStackTrace();
 			}
 		}
 	}
@@ -448,46 +403,15 @@ public class Client implements Runnable{
 						g.setColor(thisplayer.color);
 						g.drawString("SERVER ERROR", servererrordraw[1][servererrordraw[0].length-1], servererrordraw[2][servererrordraw[0].length-1]);
 					}
-//					if(SERVERERROR) {
-//						g.setFont(new Font("Courier", Font.BOLD, 120));
-//						int half = getHeight()/2;
-//						int delta = 5;
-//						int total = 51;
-//						int net = delta*total;
-//						boolean right = true;
-//						int tic = 0 ;
-//						int x = 350;
-//						for(int a=0; a<=total; a+=1) {
-//							int m = delta*a;
-//							g.setColor(new Color(m, m, m));
-//							if(right) {
-//								x+=delta;
-//							} else {
-//								x-=delta;
-//							}
-//							if(tic++>7) {
-//								if(Math.random()<.95) {
-//									right = !right;
-//									tic = 0;
-//								}
-//							}
-//							g.drawString("SERVER ERROR", x, half-net+m);
-//						}
-//						g.setColor(thisplayer.color);
-//						g.drawString("SERVER ERROR", x, half);
-//					}
 					for(int a=0; a<bases.size(); a++) {
 						Base b = bases.get(a);
 						g.setColor(b.getPlayer().color);
 						Rectangle r = b.getBounds();
 						g.fillRect(r.x-lookingat.x, r.y-lookingat.y, r.width, r.height);
-//						g.fillRect(b.getX()-lookingat.x, b.getY()-lookingat.y, b.getWidth(), b.getHeight());
-//						g.fillRect(b.getX()-lookingat.x-b.getWidth()/2, b.getY()-lookingat.y-b.getHeight()/2, b.getWidth(), b.getHeight());
-					}
+						}
 					for(int a=0; a<explosions.size(); a++) {
 						Explosion e = explosions.get(a);
 						g.setColor(Color.orange);
-//						g.fillOval(e.x-lookingat.x, e.y-lookingat.y, e.radius, e.radius);
 						g.fillOval(e.x-e.radius/2-lookingat.x, e.y-e.radius/2-lookingat.y, e.radius, e.radius);
 					}
 					for(int a=0; a<ships.size(); a++) {
@@ -495,37 +419,19 @@ public class Client implements Runnable{
 						g.setColor(b.getPlayer().color);
 						Rectangle r = b.getBounds();
 						g.fillRect(r.x-lookingat.x, r.y-lookingat.y, r.width, r.height);
-//						g.fillRect(b.getX()-lookingat.x, b.getY()-lookingat.y, b.getWidth(), b.getHeight());
-//						g.fillRect(b.getX()-lookingat.x-b.getWidth()/2, b.getY()-lookingat.y-b.getHeight()/2, b.getWidth(), b.getHeight());
 					}
-					
 					for(int a=0; a<lasers.size(); a++) {
 						Laser l = lasers.get(a);
 						Ship from = getShip(l.from);
 						Ship to = getShip(l.to);
 						if(from==null || to==null) { 
 							System.out.println("Not drawing Laser because either target or source is null");
-//							lasers.remove(a--);
 						} else {
-//							g.setColor(from.getPlayer().color);
-//							for(int b=-l.width/2; b<l.width/2; b++) {
-//								int xsh = 0;
-//								int ysh = 0;
-//								if(Math.random()<.5) {
-//									xsh = b;
-//									ysh = 0;
-//								} else {
-//									xsh = 0;
-//									ysh = b;
-//								}
 							double ratio = (l.width*1.0)/l.ttl;
-//							System.out.println(ratio);
 							if(ratio>.9) {
 								g.setColor(new Color((int)(from.getPlayer().color.getRed()*ratio), (int)(from.getPlayer().color.getGreen()*ratio), (int)(from.getPlayer().color.getBlue()*ratio)));
-	//							g.setColor(from.getPlayer().color);
 								g.drawLine(from.getBounds().x-lookingat.x, from.getBounds().y-lookingat.y, to.getBounds().x-lookingat.x, to.getBounds().y-lookingat.y);
 							}
-//							}
 						}
 					}
 					for(int a=0; a<buttons.length; a++) {
@@ -680,9 +586,6 @@ public class Client implements Runnable{
 		}
 	}
 	public class ConnectFrame extends JFrame {
-		/**
-		 * 
-		 */
 		private static final long serialVersionUID = 1L;
 		JPanel panel;
 		JTextField ipaddress;
@@ -698,11 +601,7 @@ public class Client implements Runnable{
 			this.setSize(500, 500);
 			this.setTitle("Client");
 			panel = new JPanel() {
-				/**
-				 * 
-				 */
 				private static final long serialVersionUID = 1L;
-
 				@Override
 				public void paintComponent(Graphics g) {
 					super.paintComponent(g);
@@ -742,9 +641,6 @@ public class Client implements Runnable{
 			usernamebox.setSize(250, 30);
 			usernamebox.setLocation(20, 80);
 			panel.add(usernamebox);
-//			redbox = new JTextField(""+(int)(Math.random()*25)*10);
-//			greenbox = new JTextField(""+(int)(Math.random()*25)*10);
-//			bluebox = new JTextField(""+(int)(Math.random()*25)*10);
 			redbox = new JTextField(""+50);
 			greenbox = new JTextField(""+100);
 			bluebox = new JTextField(""+150);
@@ -860,8 +756,14 @@ public class Client implements Runnable{
 			}
 			repaint();
 		}
+		int numlines = 0;
 		public void addText(String s) {
-			serverplayers.setText(serverplayers.getText()+s);
+			if(++numlines>12) {
+				serverplayers.setText(s);
+				numlines = 1;
+			} else {
+				serverplayers.setText(serverplayers.getText()+s);
+			}
 		}
 		public void setText(String s) {
 			serverplayers.setText(s);
