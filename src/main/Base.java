@@ -12,6 +12,7 @@ public class Base implements Serializable{
 	private Rectangle bounds;
 	private Player player;
 	private int timetospawn;
+	
 	private int TIMETOSPAWN;
 	private int HEALTH;
 	private int DAMAGE;
@@ -22,7 +23,12 @@ public class Base implements Serializable{
 	private int money;
 	public int id;
 	public static int sid;
+	private transient int[] upgrades;
 	public Base(Player mine, int sx, int sy, int sw, int sh) {
+		upgrades = new int[6];
+		for(int a=0; a<upgrades.length; a++) {
+			upgrades[a] = 1;
+		}
 		id = sid++;
 		x = sx;
 		y = sy;
@@ -34,34 +40,54 @@ public class Base implements Serializable{
 		SHOOTINGSPEED = 10;
 		RANGE = 200;
 		WIDTH = 20;
-		TIMETOSPAWN = 5;
+		TIMETOSPAWN = 15;
 		timetospawn = 0;
 		bounds = new Rectangle(x, y, width, height);
 		player = mine;
 		money = 0;
 	}
 	public void upgrade(Upgrade upgrade) {
-		int t = upgrade.type;
-		if(t==Upgrade.DAMAGE) {
-			DAMAGE+=1;
-		} else if(t==Upgrade.HEALTH) {
-			HEALTH+=1;
-		} else if(t==Upgrade.RANGE) {
-			RANGE+=1;
-		} else if(t==Upgrade.SHOOTINGSPEED) {
-			//needs rebalancing
-			SHOOTINGSPEED-=1;
-			if(SHOOTINGSPEED<=0) {
-				SHOOTINGSPEED = 1;
+		if(upgrade.getCost()<=money) {
+			switch(upgrade.upgrade) {
+				case TIMETOSPAWN:
+					if(TIMETOSPAWN>5) {
+						TIMETOSPAWN-=1;
+						upgrades[0]++;
+						money-=upgrade.getCost();
+					}
+					break;
+				case HEALTH:
+					HEALTH+=1;
+					upgrades[1]++;
+					money-=upgrade.getCost();
+					break;
+				case DAMAGE:
+					DAMAGE+=1;
+					upgrades[2]++;
+					money-=upgrade.getCost();
+					break;
+				case SPEED:
+					SPEED+=1;
+					upgrades[3]++;
+					money-=upgrade.getCost();
+					break;
+				case SHOOTINGSPEED:
+					if(SHOOTINGSPEED>5) {
+						SHOOTINGSPEED-=1;
+						upgrades[4]++;
+						money-=upgrade.getCost();
+					}
+					break;
+				case RANGE:
+					RANGE+=5;
+					upgrades[5]++;
+					money-=upgrade.getCost();
+					break;
+				default:
+					break;
 			}
-		} else if(t==Upgrade.SPEED) {
-			SPEED+=1;
-		} else if(t==Upgrade.TIMETOSPAWN) {
-			//needs rebalancing
-			TIMETOSPAWN-=1;
-			if(TIMETOSPAWN<=0) {
-				TIMETOSPAWN = 1;
-			}
+		} else {
+			System.out.println("Not enough money. Have:"+money+", need:"+upgrade.getCost());
 		}
 	}
 	public void resetTimer() {
@@ -108,6 +134,7 @@ public class Base implements Serializable{
 	public void addMoney(int add) {
 		money += add;
 	}
+	public int[] getUpgrades() { return upgrades; }
 	public int getMoney() { return money; }
 	public int getX() { return x; }
 	public int getY() { return y; }

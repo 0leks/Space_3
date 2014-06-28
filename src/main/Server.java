@@ -22,11 +22,15 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JSlider;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.Timer;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import data.ServerData;
+import data.Upgrade;
 
 public class Server implements Runnable {
 	public ServerSocket server;
@@ -40,16 +44,19 @@ public class Server implements Runnable {
 	ServerData serverdata;
 	World world;
 	public int selectedworldsize;
+	public int startingmoney;
 	public Server() {
 		selectedworldsize = 1;
+		startingmoney = 10;
 		thread = new Thread(this);
 		creationframe = new CreationFrame();
 		connections = new ArrayList<Connection>();
 		servertimer = new Timer(World.GAMETIMER, new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				serverdata.players = worldframe.players.getText();
-				serverdata.radius = World.getRadius(selectedworldsize);
+//				serverdata.players = worldframe.players.getText();
+//				serverdata.radius = World.getRadius(selectedworldsize);
+				serverdata = getServerData();
 				for(int a=0; a<connections.size(); a++) {
 					Connection c = connections.get(a);
 					c.send(serverdata);
@@ -61,14 +68,26 @@ public class Server implements Runnable {
 	public ServerData getServerData() {
 		serverdata.players = worldframe.players.getText();
 		serverdata.radius = World.getRadius(selectedworldsize);
+		serverdata.startingmoney = startingmoney;
 		return serverdata;
 	}
 	public void playerMoveCommand(Player p, int x, int y) {
 		world.playerMoveCommand(p, x, y);
 	}
+	public void playerUpgradeCommand(Player player, Upgrade u) {
+		world.playerUpgradeCommand(player, u);
+	}
 	public void sendToAll(Object o) {
 		for(int a=0; a<connections.size(); a++) {
 			connections.get(a).send(o);
+		}
+	}
+
+	public void sendToPlayer(Player player, int[] upgrades) {
+		for(int a=0; a<connections.size(); a++) {
+			if(connections.get(a).player.equals(player)) {
+				connections.get(a).send(upgrades);
+			}
 		}
 	}
 	public static void main(String[] args) {
@@ -163,6 +182,7 @@ public class Server implements Runnable {
 		JRadioButton small;
 		JRadioButton medium;
 		JRadioButton large;
+		JSlider startinggold;
 		ButtonGroup size;
 		public WorldFrame() {
 			this.setSize(500, 500);
@@ -196,6 +216,7 @@ public class Server implements Runnable {
 					g.drawString(title, 20, 35);
 					g.setFont(new Font("Arial", Font.PLAIN, 18));
 					g.drawString("World Size:", 55, 273);
+					g.drawString("Starting $: "+startingmoney, 55, 300);
 				}
 			};
 			int x = 150;
@@ -223,7 +244,23 @@ public class Server implements Runnable {
 			this.add(small);
 			this.add(medium);
 			this.add(large);
-
+			
+			startinggold = new JSlider(JSlider.HORIZONTAL, 0, 100, 10);
+			startinggold.setSize(275, 50);
+			startinggold.setLocation(175, y+15);
+//			startinggold.setMajorTickSpacing(20);
+			startinggold.setMinorTickSpacing(10);
+			startinggold.setPaintTicks(true);
+			startinggold.addChangeListener(new ChangeListener() {
+				@Override
+				public void stateChanged(ChangeEvent e) {
+					JSlider source = (JSlider)e.getSource();
+				    startingmoney = (int)source.getValue();
+				}
+			});
+			this.add(startinggold);
+			
+			
 			start = new JButton("START GAME");
 			start.setSize(190, 40);
 			start.setLocation(50, 400);
@@ -245,6 +282,10 @@ public class Server implements Runnable {
 					createWorld();
 					create.setVisible(false);
 					start.setVisible(true);
+					small.setEnabled(false);
+					medium.setEnabled(false);
+					large.setEnabled(false);
+					startinggold.setEnabled(false);
 				}
 			});
 			this.add(panel, BorderLayout.CENTER);
@@ -257,7 +298,8 @@ public class Server implements Runnable {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
 					String text = "Players:\n";
-					for(Connection c : connections) {
+					for(int a=0; a<connections.size(); a++) {
+						Connection c = connections.get(a);
 						if(c.player!=null) {
 							text+=c.player+"\n";
 						} else {

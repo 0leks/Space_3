@@ -52,7 +52,7 @@ public class Client implements Runnable{
 	GameFrame gameframe;
 	public boolean startclient;
 	private Button press;
-	private ArrayList<Button> buttons;
+	private Button[] buttons;
 	private ArrayList<Base> bases;
 	private ArrayList<Ship> ships;
 	private ArrayList<Laser> lasers;
@@ -66,8 +66,10 @@ public class Client implements Runnable{
 	public ArrayList<Rectangle> target;
 	public Timer tim;
 	private int money;
+	private int[][] servererrordraw;
+	private int direction = 1;
 	public Client() {
-		buttons = new ArrayList<Button>();
+		buttons = new Button[6];
 		target = new ArrayList<Rectangle>();
 		bases = new ArrayList<Base>();
 		ships = new ArrayList<Ship>();
@@ -84,57 +86,134 @@ public class Client implements Runnable{
 	    zoomtobase = true;
 	    initializeButtons();
 	}
+	public void updateServerErrorDraw() {
+		int shift = (int)(Math.random()*8)-1;
+		if(shift>1)
+			shift = 1;
+		int len = servererrordraw[0].length-1;
+		servererrordraw[1][len]+=shift*direction;
+		int x = servererrordraw[1][len];
+		if(x>650) {
+			direction = -1;
+		}
+		if(x<200) {
+			direction = 1;
+		}
+//		for(int a=servererrordraw[0].length-servererrordraw[0].length/5; a<servererrordraw[0].length; a++) {
+//			if(Math.random()<.01) {
+//				shift+=direction*2;
+//			}
+//			if(Math.random()<.01) {
+//				shift+=(direction+1)*2;
+//			}
+//			if(Math.random()<.01) {
+//				shift+=(direction-1)*2;
+//			}
+//			servererrordraw[1][a]+=shift;
+//			int x = servererrordraw[1][a];
+//			if(x>650) {
+//				direction = -1;
+//			}
+//			if(x<200) {
+//				direction = 1;
+//			}
+//		}
+		
+		for(int a=1; a<servererrordraw[0].length; a++) {
+			if(servererrordraw[1][a]>servererrordraw[1][a-1]+(servererrordraw[0].length-a)/4) {
+				servererrordraw[1][a-1]+=1;
+			} else if(servererrordraw[1][a]<servererrordraw[1][a-1]-(servererrordraw[0].length-a)/4) {
+				servererrordraw[1][a-1]-=1;
+			}
+		}
+	}
+	public void initializeServerErrorDraw() {
+		if(SERVERERROR == true) {
+			return;
+		}
+		int half = gameframe.getHeight()/2;
+		int delta = 5;
+		int total = 51;
+		int net = delta*total;
+		boolean right = true;
+		int tic = 0 ;
+		int x = 350;
+	    servererrordraw = new int[3][total+1];
+		for(int a=0; a<=total; a++) {
+			int m = delta*a;
+			servererrordraw[0][a] = m;
+			System.out.println(m);
+//			g.setColor(new Color(m, m, m));
+			if(right) {
+				x+=delta;
+			} else {
+				x-=delta;
+			}
+			if(tic++>7) {
+//				if(Math.random()<.95) {
+					right = !right;
+					tic = 0;
+//				}
+			}
+			servererrordraw[1][a] = x;
+			servererrordraw[2][a] = half-net+m;
+//			g.drawString("SERVER ERROR", x, half-net+m);
+		}
+		SERVERERROR = true;
+	}
 	public void initializeButtons() {
-		buttons.clear();
+		buttons = new Button[6];
 		int startx = 10;
 		int dx = 0;
 		int starty = 40;
 		int dy = 50;
 		int width = 100;
 		int height = 40;
-		starty-=dy;
-		buttons.add(new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(Upgrade.DAMAGE)) {
-			@Override
-			public void paint(Graphics g) {
-				g.setColor(Color.blue);
-				super.paint(g);
-			}
-		});
-		buttons.add(new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(Upgrade.HEALTH)) {
-			@Override
-			public void paint(Graphics g) {
-				g.setColor(Color.red);
-				super.paint(g);
-			}
-		});
-		buttons.add(new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(Upgrade.RANGE)) {
-			@Override
-			public void paint(Graphics g) {
-				g.setColor(Color.GRAY);
-				super.paint(g);
-			}
-		});
-		buttons.add(new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(Upgrade.SHOOTINGSPEED)) {
-			@Override
-			public void paint(Graphics g) {
-				g.setColor(Color.YELLOW);
-				super.paint(g);
-			}
-		});
-		buttons.add(new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(Upgrade.SPEED)) {
-			@Override
-			public void paint(Graphics g) {
-				g.setColor(Color.ORANGE);
-				super.paint(g);
-			}
-		});
-		buttons.add(new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(Upgrade.TIMETOSPAWN)) {
+		starty-=dy;//TIMETOSPAWN, HEALTH, DAMAGE, SPEED, SHOOTINGSPEED, RANGE;
+
+		buttons[0] = new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.TIMETOSPAWN, 1)) {
 			@Override
 			public void paint(Graphics g) {
 				g.setColor(Color.CYAN);
-				super.paint(g);
+				super.paint(g, "SpawnTime");
 			}
-		});
+		};
+		buttons[1] = new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.HEALTH, 1)) {
+			@Override
+			public void paint(Graphics g) {
+				g.setColor(Color.red);
+				super.paint(g, "Health");
+			}
+		};
+		buttons[2] = new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.DAMAGE, 1)) {
+			@Override
+			public void paint(Graphics g) {
+				g.setColor(Color.blue);
+				super.paint(g, "Damage");
+			}
+		};
+		buttons[3] = new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.SPEED, 1)) {
+			@Override
+			public void paint(Graphics g) {
+				g.setColor(Color.ORANGE);
+				super.paint(g, "Speed");
+				
+			}
+		};
+		buttons[4] = new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.SHOOTINGSPEED, 1)) {
+			@Override
+			public void paint(Graphics g) {
+				g.setColor(Color.YELLOW);
+				super.paint(g, "Reload");
+			}
+		};
+		buttons[5] = new Button(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.RANGE, 1)) {
+			@Override
+			public void paint(Graphics g) {
+				g.setColor(Color.MAGENTA);
+				super.paint(g, "Range");
+			}
+		};
 	}
 	public void disconnect() {
 		System.out.println("Disconnecting");
@@ -266,6 +345,12 @@ public class Client implements Runnable{
 							if(s.getPlayer().equals(thisplayer)) {
 								money = s.getMoney();
 							}
+//							int[] upgrades = s.getUpgrades();
+//							for(int b=0; b<upgrades.length; b++) {
+//								buttons[b].setLevel(upgrades[b]);
+////								System.out.println(upgrades[b]);
+//							}
+//							System.out.println("Updating upgrades");
 //							bases.remove(a);
 //							bases.add(s);
 							added = true;
@@ -274,6 +359,12 @@ public class Client implements Runnable{
 					}
 					if(!added) {
 						bases.add(s);
+					}
+				}
+				if(read instanceof int[]) {
+					int[] upgrades = (int[])read;
+					for(int b=0; b<upgrades.length; b++) {
+						buttons[b].setLevel(upgrades[b]);
 					}
 				}
 				if(read instanceof Laser) {
@@ -319,7 +410,8 @@ public class Client implements Runnable{
 				e.printStackTrace();
 			} catch (IOException e) {
 				connectframe.addText(e.getMessage()+" ("+ip+":"+port+")\n");
-				SERVERERROR = true;
+				initializeServerErrorDraw();
+				updateServerErrorDraw();
 //				e.printStackTrace();
 			}
 		}
@@ -348,32 +440,42 @@ public class Client implements Runnable{
 					g.fillRect(0, 0, getWidth(), getHeight());
 					if(SERVERERROR) {
 						g.setFont(new Font("Courier", Font.BOLD, 120));
-						int half = getHeight()/2;
-						int delta = 5;
-						int total = 51;
-						int net = delta*total;
-						boolean right = true;
-						int tic = 0 ;
-						int x = 350;
-						for(int a=0; a<=total; a+=1) {
-							int m = delta*a;
-							g.setColor(new Color(m, m, m));
-							if(right) {
-								x+=delta;
-							} else {
-								x-=delta;
-							}
-							if(tic++>7) {
-								if(Math.random()<.95) {
-									right = !right;
-									tic = 0;
-								}
-							}
-							g.drawString("SERVER ERROR", x, half-net+m);
+						for(int a=0; a<servererrordraw[0].length; a++) {
+							int col = servererrordraw[0][a];
+							g.setColor(new Color(col, col, col));
+							g.drawString("SERVER ERROR", servererrordraw[1][a], servererrordraw[2][a]);
 						}
 						g.setColor(thisplayer.color);
-						g.drawString("SERVER ERROR", x, half);
+						g.drawString("SERVER ERROR", servererrordraw[1][servererrordraw[0].length-1], servererrordraw[2][servererrordraw[0].length-1]);
 					}
+//					if(SERVERERROR) {
+//						g.setFont(new Font("Courier", Font.BOLD, 120));
+//						int half = getHeight()/2;
+//						int delta = 5;
+//						int total = 51;
+//						int net = delta*total;
+//						boolean right = true;
+//						int tic = 0 ;
+//						int x = 350;
+//						for(int a=0; a<=total; a+=1) {
+//							int m = delta*a;
+//							g.setColor(new Color(m, m, m));
+//							if(right) {
+//								x+=delta;
+//							} else {
+//								x-=delta;
+//							}
+//							if(tic++>7) {
+//								if(Math.random()<.95) {
+//									right = !right;
+//									tic = 0;
+//								}
+//							}
+//							g.drawString("SERVER ERROR", x, half-net+m);
+//						}
+//						g.setColor(thisplayer.color);
+//						g.drawString("SERVER ERROR", x, half);
+//					}
 					for(int a=0; a<bases.size(); a++) {
 						Base b = bases.get(a);
 						g.setColor(b.getPlayer().color);
@@ -402,8 +504,8 @@ public class Client implements Runnable{
 						Ship from = getShip(l.from);
 						Ship to = getShip(l.to);
 						if(from==null || to==null) { 
-							System.out.println("Removing Laser because either target or source is null");
-							lasers.remove(a--);
+							System.out.println("Not drawing Laser because either target or source is null");
+//							lasers.remove(a--);
 						} else {
 //							g.setColor(from.getPlayer().color);
 //							for(int b=-l.width/2; b<l.width/2; b++) {
@@ -426,13 +528,13 @@ public class Client implements Runnable{
 //							}
 						}
 					}
-					for(int a=0; a<buttons.size(); a++) {
-						Button b = buttons.get(a);
+					for(int a=0; a<buttons.length; a++) {
+						Button b = buttons[a];
 						b.paint(g);
 					}
-					g.setFont(new Font("Courier", Font.BOLD, 30));
+					g.setFont(new Font("Courier", Font.BOLD, 15));
 					g.setColor(Color.white);
-					g.drawString((lookingat.x+mouse.x)+","+(lookingat.y+mouse.y), 10, 30);
+					g.drawString((lookingat.x+mouse.x)+","+(lookingat.y+mouse.y), 1, 15);
 					g.setFont(new Font("Courier", Font.BOLD, 50));
 					g.drawString(money+"", 10, getHeight()-10);
 				}
@@ -518,29 +620,30 @@ public class Client implements Runnable{
 					int y = e.getY()+lookingat.y;
 					mouse = e.getPoint();
 					if(e.getButton()==MouseEvent.BUTTON1) {
-						for(int a=0; a<buttons.size(); a++) {
-							Button b = buttons.get(a);
+						for(int a=0; a<buttons.length; a++) {
+							Button b = buttons[a];
 							if(b.bounds.contains(mouse)) {
-								press = b;
+								if(b.getUpgrade().getCost()<=money) {
+									send(b.getUpgrade());
+								}
 							}
 						}
-//						int cd = (int)(Math.random()*100+50);
-//						Ship s = new Ship(thisplayer, x, y, 20, 20, 10, cd, 1250, 10, 30);
-//						send(s);
-//						System.out.println("Sending Ship:"+s.toString());
 					} else if(e.getButton()==MouseEvent.BUTTON2) {
-//						for(int a=x-200; a<=x+200; a+=FREQ) {
-//							for(int b=y-200; b<=y+200; b+=FREQ) {
-//								int cd = (int)(Math.random()*100+50);
-//								Ship s = new Ship(thisplayer, a, b, 20, 20, 10, cd, 2150, 10, 30);
-//								send(s);
-//								System.out.println("Sending Ship:"+s.toString());
-//							}
-//						}
+						
 					} else if(e.getButton()==MouseEvent.BUTTON3) {
-						Command c = new Command(Command.MOVE, x, y);
-						send(c);
-						System.out.println("Sending Command:"+c.toString());
+						boolean buttonpressed = false;
+						for(int a=0; a<buttons.length; a++) {
+							Button b = buttons[a];
+							if(b.bounds.contains(mouse)) {
+								press = b;
+								buttonpressed = true;
+							}
+						}
+						if(!buttonpressed) {
+							Command c = new Command(Command.MOVE, x, y);
+							send(c);
+							System.out.println("Sending Command:"+c.toString());
+						}
 					}
 				}
 				@Override

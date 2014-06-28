@@ -1,6 +1,7 @@
 package main;
 
 import java.util.ArrayList;
+import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -11,6 +12,7 @@ import javax.swing.Timer;
 import data.GameData;
 import data.RemoveLaser;
 import data.ShipData;
+import data.Upgrade;
 
 public class World{
 	private ArrayList<Player> players;
@@ -61,7 +63,6 @@ public class World{
 							s.shot();
 							Laser l = new Laser(s.getID(), en.getID(), s.getCooldown()-4, s.getDamage());
 							l.source = s.source;
-//							System.out.println("Ship "+s.getID()+" Shooting at "+en.getID()+" cd:"+en.getCooldown()+"                 "+s.cooldown);
 							lasers.add(l);
 							server.sendToAll(l);
 						}
@@ -75,7 +76,6 @@ public class World{
 						Ship spawn = b.getShip();
 						Rectangle bounds = getSpace(spawn, b);
 						if(bounds==null) {
-//							System.out.println("Not enough space to spawn.");
 						} else {
 							spawn.setPos(bounds);
 							addShip(spawn);
@@ -83,7 +83,7 @@ public class World{
 						}
 					}
 				}
-				for(int a=0; a<lasers.size(); a++) {
+				for(int a=lasers.size()-1; a>=0; a--) {
 					Laser l = lasers.get(a);
 					if(l.widen()) {
 						Ship en = getShip(l.to);
@@ -96,7 +96,8 @@ public class World{
 								}
 							}
 						}
-						lasers.remove(a--);
+						if(a<lasers.size())
+							lasers.remove(a);
 					}
 				}
 //				gamedata = new GameData();
@@ -233,13 +234,27 @@ public class World{
 		for(int a=0; a<sortedships.size(); a++) {
 			Ship s = sortedships.get(a);
 			if(s.getPlayer().equals(p)) {
-//				System.out.println("Setting move target of Ship "+s+" to ("+x+","+y+")");
 				s.setTarget(new Point(x, y));
 			}
 		}
 	}
+
+	public void playerUpgradeCommand(Player player, Upgrade u) {
+		Base b = this.getBase(player);
+		if(b==null) {
+			return;
+		}
+		b.upgrade(u);
+	}
+	public Base getBase(Player p) {
+		for(int a=0; a<this.bases.size(); a++) {
+			if(bases.get(a).getPlayer().equals(p)) {
+				return bases.get(a);
+			}
+		}
+		return null;
+	}
 	public void addShip(Ship s) {
-//		System.out.println("Adding Ship:"+s.toString());
 		ships.add(s);
 		sortedships.add(s);
 	}
@@ -247,6 +262,7 @@ public class World{
 //		long cur = System.currentTimeMillis();
 		for(int a=0; a<bases.size(); a++) {
 			server.sendToAll(bases.get(a));
+			server.sendToPlayer(bases.get(a).getPlayer(), bases.get(a).getUpgrades());
 		}
 		if(ships.size()>0) {
 			for(int a=0; a<ships.size() && a<100 ; a++) {
@@ -278,9 +294,11 @@ public class World{
 		int numbases = players.size();
 		double radperbase = 2*Math.PI/numbases;
 		int playerindex = 0;
+		
 		for(double rad = 0; rad<2*Math.PI && playerindex<numbases; rad = rad+radperbase, playerindex++) {
 			int[] center = polartorect(radius-40, rad);
 			Base b = new Base(players.get(playerindex), center[0], center[1], 80, 80);
+			b.addMoney(server.startingmoney);
 			bases.add(b);
 		}
 	}
@@ -321,5 +339,8 @@ public class World{
 		toret[0] = Math.sqrt(x*x+y*y);
 		toret[1] = Math.atan2(y, x);
 		return toret;
+	}
+	public static Color getOposite(Color c) {
+		return new Color(255-c.getRed(), 255-c.getGreen(), 255);
 	}
 }

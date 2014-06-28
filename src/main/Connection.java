@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import data.Command;
 import data.Disconnect;
 import data.PlayerConfirm;
+import data.Upgrade;
 
 public class Connection implements Runnable{
 	ObjectInputStream in;
@@ -20,7 +21,7 @@ public class Connection implements Runnable{
 	int lifepoints;
 	public Connection(Server w, ObjectInputStream i, ObjectOutputStream o) {
 		server = w;
-		lifepoints = 10;
+		lifepoints = 4;
 		in = i;
 		out = o;
 		player  = new Player();
@@ -77,6 +78,10 @@ public class Connection implements Runnable{
 						server.playerMoveCommand(this.player, com.x, com.y);
 					}
 				}
+				if(ob instanceof Upgrade) {
+					Upgrade u = (Upgrade)ob;
+					server.playerUpgradeCommand(this.player, u);
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 				error();
@@ -90,7 +95,7 @@ public class Connection implements Runnable{
 		}
 	}
 	public void error() {
-		System.out.println(lifepoints+"tries before detach");
+		System.out.println(lifepoints+" errors before detach");
 		if(lifepoints--<=0) {
 			detach();
 		}
