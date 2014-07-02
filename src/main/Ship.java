@@ -6,15 +6,13 @@ import java.io.Serializable;
 
 import data.ShipData;
 
-public class Ship implements Serializable {
+public class Ship extends Thing {
 	private static final long serialVersionUID = 1L;
 	private int x, y;
 	private int width, height;
 	private Player player;
 	private int speed;
 	private Point target;
-	private int id;
-	public static int sid;
 	private Rectangle bounds;
 	private ShipData data;
 	public boolean sent;
@@ -30,7 +28,6 @@ public class Ship implements Serializable {
 		range = srange;
 		COOLDOWN = scooldown;
 		cooldown = 0;
-		id = sid++;
 		loot = 1;
 		x = sx;
 		y = sy;
@@ -55,11 +52,13 @@ public class Ship implements Serializable {
 		this.bounds = other.getBounds();
 		this.player = other.getPlayer();
 		this.speed = other.getSpeed();
+		this.health = other.getHealth();
 	}
 	public void become(ShipData other) {
 		this.id = other.id;
 		this.x = other.x;
 		this.y = other.y;
+		this.health = other.health;
 	}
 	public String toString() {
 		return "ID:"+this.id+","+player+","+x+","+y+","+width+","+height;
@@ -67,9 +66,10 @@ public class Ship implements Serializable {
 	public void setTarget(Point newtarget) {
 		target = newtarget;
 	}
-	public boolean takeDamage(int dam) {
+	@Override
+	public boolean takeDamage(int damage) {
 //		System.out.println("Ship "+id+" took "+dam+" damage "+"                 "+cooldown);
-		health-=dam;
+		health-=damage;
 //		width = health;
 //		height = health;
 //		if(width<0) {
@@ -78,13 +78,13 @@ public class Ship implements Serializable {
 //		if(height<0) {
 //			height = 1;
 //		}
-		if(health<0) {
+		if(health<=0) {
 			return true;
 		}
 		return false;
 	}
-	public boolean canShoot(Ship other) {
-		if(this.getDistanceFrom(other)<this.getRange()) {
+	public boolean canShoot(Thing en) {
+		if(en.getDistanceFrom(this)<this.getRange()) {
 			return true;
 		}
 		return false;
@@ -100,6 +100,7 @@ public class Ship implements Serializable {
 		data.x = x;
 		data.y = y;
 		data.id = id;
+		data.health = health;
 		return data;
 	}
 	public Rectangle getBounds() {
@@ -147,7 +148,13 @@ public class Ship implements Serializable {
 	public boolean collides(Ship other) {
 		return this.getBounds().intersects(other.getBounds());
 	}
+	@Override
 	public int getDistanceFrom(Ship other) {
+		int dist = Math.abs(other.getY()-this.getY())+Math.abs(other.getX()-this.getX());
+		return dist;
+	}
+	@Override
+	public int getDistanceFrom(Base other) {
 		int dist = Math.abs(other.getY()-this.getY())+Math.abs(other.getX()-this.getX());
 		return dist;
 	}
@@ -157,9 +164,9 @@ public class Ship implements Serializable {
 		}
 		return false;
 	}
+	@Override
 	public int getLoot() { return loot; }
 	public int getHealth() { return health; }
-	public int getID() { return id; }
 	public int getDamage() { return damage; }
 	public int getRange() { return range; }
 	public int getCooldown() { return COOLDOWN; }

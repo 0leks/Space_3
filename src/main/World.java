@@ -28,8 +28,13 @@ public class World{
 	public static final int SMALL = 1;
 	public static final int MEDIUM = 2;
 	public static final int LARGE = 3;
+	
+	private long averagetime;
+	private int numruns;
 	public World(int size, Server s) {
 		server = s;
+		numruns = 0;
+		averagetime = 0;
 		players = new ArrayList<Player>();
 		bases = new ArrayList<Base>();
 		ships = new ArrayList<Ship>();
@@ -40,6 +45,7 @@ public class World{
 		gametimer= new Timer(World.GAMETIMER, new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				long currenttime = System.currentTimeMillis();
 				for(int a=0; a<ships.size(); a++) {
 					Ship s = ships.get(a);
 					if(s==null) {
@@ -58,10 +64,16 @@ public class World{
 					}
 					s.servertic();
 					if(s.laserReady()) {
-						Ship en = getClosestEnemy(s);
+						Thing en = getClosestEnemy(s);
+						
+//						System.out.println("Closest Enemy is "+en.getID());
+						
 						if(en!=null && s.canShoot(en)) {
+//							System.out.println("Can shoot at "+en.getID());
 							s.shot();
+//							System.out.println("Shot at "+en.getID());
 							Laser l = new Laser(s.getID(), en.getID(), s.getCooldown()-4, s.getDamage());
+//							System.out.println("Laser "+l+" created");
 							l.source = s.source;
 							lasers.add(l);
 							server.sendToAll(l);
@@ -86,10 +98,10 @@ public class World{
 				for(int a=lasers.size()-1; a>=0; a--) {
 					Laser l = lasers.get(a);
 					if(l.widen()) {
-						Ship en = getShip(l.to);
+						Thing en = getThing(l.to);
 						if(en!=null) {
 							if(en.takeDamage(l.damage)) {
-								removeShip(en);
+								removeThing(en);
 								Base b = l.source;
 								if(b!=null) {
 									b.addMoney(en.getLoot());
@@ -100,11 +112,11 @@ public class World{
 							lasers.remove(a);
 					}
 				}
-//				gamedata = new GameData();
-//				gamedata.bases = bases;
-//				// TODO needs to be changed to not create a new ArrayList every time data is sent
-//				gamedata.ships = new ArrayList(ships);
 				sendGameData();
+				long delta = System.currentTimeMillis()-currenttime;
+				averagetime = ((averagetime*numruns) + delta)/(numruns + 1);
+				numruns++;
+				System.out.println("Time: "+delta+",  Average:"+averagetime);
 			}
 		});
 	}
@@ -144,8 +156,16 @@ public class World{
 		}
 		return null;
 	}
+	public void removeThing(Thing t) {
+		if(t instanceof Ship) {
+			removeShip((Ship)t);
+		} else if (t instanceof Base) {
+			//Need to add stuff here
+		}
+		
+	}
 	public void removeShip(Ship s) {
-		System.out.println("Removing Ship "+s.getID());
+//		System.out.println("Removing Ship "+s.getID());
 		ships.remove(s);
 		sortedships.remove(s);
 		ShipData sd = s.getData();
@@ -158,21 +178,34 @@ public class World{
 			Laser l = lasers.get(a);
 			if(l.from==s.getID()) {
 				lasers.remove(a);
-				System.out.println("Removing Laser");
+//				System.out.println("Removing Laser");
 				RemoveLaser rl = new RemoveLaser(l);
 				server.sendToAll(rl);
 			}
 		}
 	}
-	public Ship getShip(int id) {
+	public Thing getThing(int id) {
 		for(int a=0; a<ships.size(); a++) {
 			if(ships.get(a).getID()==id) {
 				return ships.get(a);
 			}
 		}
+		for(int a=0; a<bases.size(); a++) {
+			if(bases.get(a).getID()==id) {
+				return bases.get(a);
+			}
+		}
 		return null;
 	}
-	public Ship getRandomCloseEnemy(Ship s) {
+//	public Ship getShip(int id) {
+//		for(int a=0; a<ships.size(); a++) {
+//			if(ships.get(a).getID()==id) {
+//				return ships.get(a);
+//			}
+//		}
+//		return null;
+//	}
+	public Thing getRandomCloseEnemy(Ship s) {
 		Ship en = null;
 		int dist = 99999;
 		for(int a = 0; a<sortedships.size(); a++) {
@@ -180,23 +213,38 @@ public class World{
 			if(!b.getPlayer().equals(s.getPlayer())) {
 				int d = b.getDistanceFrom(s);
 				if(d<dist) {
-					if(dist==99999 || Math.random()<.5) {
-						dist = d;
-						en = b;
+					dist = d;
+					en = b;
+					if(Math.random()<.1) {
+						return en;
 					}
 				}
 			}
 		}
 		return en;
 	}
-	public Ship getClosestEnemy(Ship s) {
-		Ship en = null;
+	public Thing getClosestEnemy(Ship s) {
+		Thing en = null;
 		int dist = 99999;
 		for(int a = 0; a<sortedships.size(); a++) {
 			Ship b = sortedships.get(a);
 			if(!b.getPlayer().equals(s.getPlayer())) {
 				int d = b.getDistanceFrom(s);
 				if(d<dist) {
+					dist = d;
+					en = b;
+				}
+			}
+		}
+		for(int a=0; a<bases.size(); a++) {
+			Base b = bases.get(a);
+//			System.out.println("Checking base "+b.getID());
+			if(!b.getPlayer().equals(s.getPlayer())) {
+//				System.out.println("Oposite Team");
+				int d = b.getDistanceFrom(s);
+//				System.out.println("Distance:"+d);
+				if(d<dist) {
+//					System.out.println("Target is closer");
 					dist = d;
 					en = b;
 				}
@@ -341,6 +389,6 @@ public class World{
 		return toret;
 	}
 	public static Color getOposite(Color c) {
-		return new Color(255-c.getRed(), 255-c.getGreen(), 255);
+		return new Color(255-c.getRed(), 255-c.getGreen(), 255-c.getBlue());
 	}
 }

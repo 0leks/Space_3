@@ -5,13 +5,14 @@ import java.io.Serializable;
 
 import data.Upgrade;
 
-public class Base implements Serializable{
+public class Base extends Thing {
 	private static final long serialVersionUID = 1L;
 	private int x, y;
 	private int width, height;
 	private Rectangle bounds;
 	private Player player;
 	private int timetospawn;
+	private int health;
 	
 	private int TIMETOSPAWN;
 	private int HEALTH;
@@ -21,19 +22,17 @@ public class Base implements Serializable{
 	private int RANGE;
 	private int WIDTH;
 	private int money;
-	public int id;
-	public static int sid;
 	private transient int[] upgrades;
 	public Base(Player mine, int sx, int sy, int sw, int sh) {
 		upgrades = new int[6];
 		for(int a=0; a<upgrades.length; a++) {
 			upgrades[a] = 1;
 		}
-		id = sid++;
 		x = sx;
 		y = sy;
 		width = sw;
 		height = sh;
+		health = 1000;
 		HEALTH = 10;
 		DAMAGE = 1;
 		SPEED = 10;
@@ -45,6 +44,14 @@ public class Base implements Serializable{
 		bounds = new Rectangle(x, y, width, height);
 		player = mine;
 		money = 0;
+	}
+	@Override
+	public boolean takeDamage(int damage) {
+		health-=damage;
+		if(health<0) {
+			return true;
+		}
+		return false;
 	}
 	public void upgrade(Upgrade upgrade) {
 		if(upgrade.getCost()<=money) {
@@ -90,11 +97,20 @@ public class Base implements Serializable{
 			System.out.println("Not enough money. Have:"+money+", need:"+upgrade.getCost());
 		}
 	}
+	@Override
+	public int getDistanceFrom(Ship other) {
+		return other.getDistanceFrom(this);
+	}
+	@Override
+	public int getDistanceFrom(Base other) {
+		int dist = Math.abs(other.getY()-this.getY())+Math.abs(other.getX()-this.getX());
+		return dist;
+	}
 	public void resetTimer() {
 		timetospawn = 0;
 	}
 	public void tic() {
-		timetospawn++;
+		//timetospawn++;
 	}
 	public boolean ready() {
 		if(timetospawn>TIMETOSPAWN) {
@@ -111,12 +127,24 @@ public class Base implements Serializable{
 		return player+","+x+","+y+","+width+","+height;
 	}
 	public void become(Base other) {
+		this.bounds = other.bounds;
+		this.DAMAGE = other.DAMAGE;
+		this.health = other.health;
+		this.HEALTH = other.HEALTH;
+		this.height = other.height;
+		this.id = other.id;
+		this.money = other.money;
+		this.player = other.player;
+		this.RANGE = other.RANGE;
+		this.SHOOTINGSPEED = other.SHOOTINGSPEED;
+		this.SPEED = other.SPEED;
+		this.timetospawn = other.timetospawn;
+		this.TIMETOSPAWN = other.TIMETOSPAWN;
+		this.upgrades = other.upgrades;
+		this.width = other.width;
+		this.WIDTH = other.WIDTH;
 		this.x = other.x;
 		this.y = other.y;
-		this.width = other.width;
-		this.height = other.height;
-		this.player = other.player;
-		this.id = other.id;
 	}
 	public boolean collides(Rectangle asdf) {
 		if(asdf.intersects(this.getBounds())) {
@@ -134,6 +162,14 @@ public class Base implements Serializable{
 	public void addMoney(int add) {
 		money += add;
 	}
+	@Override
+	public int getLoot() {
+		int ret = money;
+		money = 0;
+		return 20+ret;
+	}
+	public int getCurrentHealth() { return health; }
+	public int getSpawnTime() { return TIMETOSPAWN; }
 	public int[] getUpgrades() { return upgrades; }
 	public int getMoney() { return money; }
 	public int getX() { return x; }
