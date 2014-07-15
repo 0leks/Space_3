@@ -13,6 +13,7 @@ public class Base extends Thing {
 	private Player player;
 	private int timetospawn;
 	private int health;
+	private boolean dead;
 	
 	private int TIMETOSPAWN;
 	private int HEALTH;
@@ -28,6 +29,7 @@ public class Base extends Thing {
 		for(int a=0; a<upgrades.length; a++) {
 			upgrades[a] = 1;
 		}
+		dead = false;
 		x = sx;
 		y = sy;
 		width = sw;
@@ -48,7 +50,9 @@ public class Base extends Thing {
 	@Override
 	public boolean takeDamage(int damage) {
 		health-=damage;
-		if(health<0) {
+		if(health<=0) {
+			dead = true;
+			health = 0;
 			return true;
 		}
 		return false;
@@ -110,10 +114,10 @@ public class Base extends Thing {
 		timetospawn = 0;
 	}
 	public void tic() {
-		//timetospawn++;
+		timetospawn++;
 	}
 	public boolean ready() {
-		if(timetospawn>TIMETOSPAWN) {
+		if(timetospawn>TIMETOSPAWN && !dead) {
 			return true;
 		}
 		return false;
@@ -129,6 +133,7 @@ public class Base extends Thing {
 	public void become(Base other) {
 		this.bounds = other.bounds;
 		this.DAMAGE = other.DAMAGE;
+		this.dead = other.dead;
 		this.health = other.health;
 		this.HEALTH = other.HEALTH;
 		this.height = other.height;
@@ -168,6 +173,7 @@ public class Base extends Thing {
 		money = 0;
 		return 20+ret;
 	}
+	public boolean getDead() { return dead; }
 	public int getCurrentHealth() { return health; }
 	public int getSpawnTime() { return TIMETOSPAWN; }
 	public int[] getUpgrades() { return upgrades; }

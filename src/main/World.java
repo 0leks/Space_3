@@ -239,7 +239,7 @@ public class World{
 		for(int a=0; a<bases.size(); a++) {
 			Base b = bases.get(a);
 //			System.out.println("Checking base "+b.getID());
-			if(!b.getPlayer().equals(s.getPlayer())) {
+			if(!b.getDead() && !b.getPlayer().equals(s.getPlayer())) {
 //				System.out.println("Oposite Team");
 				int d = b.getDistanceFrom(s);
 //				System.out.println("Distance:"+d);

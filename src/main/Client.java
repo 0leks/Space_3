@@ -1,9 +1,11 @@
 package main;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -472,6 +474,7 @@ public class Client implements Runnable{
 				public void paintComponent(Graphics g) {
 					// TODO Paint Component Method
 					super.paintComponent(g);
+					Graphics2D g2d = (Graphics2D)g;
 					g.setColor(Color.black);
 					g.fillRect(0, 0, getWidth(), getHeight());
 					if(SERVERERROR) {
@@ -489,6 +492,12 @@ public class Client implements Runnable{
 						g.setColor(b.getPlayer().color);
 						Rectangle r = b.getBounds();
 						g.fillRect(r.x-lookingat.x, r.y-lookingat.y, r.width, r.height);
+						if(b.getDead()) {
+							g2d.setStroke(new BasicStroke(10));
+							g2d.setColor(Color.black);
+							g2d.drawLine(r.x-lookingat.x, r.y-lookingat.y, r.x-lookingat.x+r.width, r.y-lookingat.y+r.height);
+							g2d.drawLine(r.x-lookingat.x+r.width, r.y-lookingat.y, r.x-lookingat.x, r.y-lookingat.y+r.height);
+						}
 						g.setColor(World.getOposite(b.getPlayer().color));
 						g.setFont(new Font("Courier", Font.BOLD, 26));
 						g.drawString(""+b.getCurrentHealth(), r.x-lookingat.x, r.y-lookingat.y+r.height);
