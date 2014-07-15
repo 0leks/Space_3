@@ -114,9 +114,12 @@ public class World{
 				}
 				sendGameData();
 				long delta = System.currentTimeMillis()-currenttime;
-				averagetime = (long) ((((double)averagetime*numruns) + delta)/(numruns + 1)*100);
+				averagetime = (long) ((((double)averagetime*numruns/100.0) + delta)/(numruns + 1)*100);
 				numruns++;
 				System.out.println("Time: "+delta+",  Average:"+(averagetime/100.0));
+				if(numruns>=100) {
+					numruns = 0;
+				}
 			}
 		});
 	}

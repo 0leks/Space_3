@@ -498,6 +498,7 @@ public class Client implements Runnable{
 							g2d.setColor(Color.black);
 							g2d.drawLine(r.x-lookingat.x, r.y-lookingat.y, r.x-lookingat.x+r.width, r.y-lookingat.y+r.height);
 							g2d.drawLine(r.x-lookingat.x+r.width, r.y-lookingat.y, r.x-lookingat.x, r.y-lookingat.y+r.height);
+							g2d.setStroke(new BasicStroke(1));
 						}
 						g.setColor(World.getOposite(b.getPlayer().color));
 						g.setFont(new Font("Courier", Font.BOLD, 26));
