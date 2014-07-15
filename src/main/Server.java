@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -187,6 +188,7 @@ public class Server implements Runnable {
 		public WorldFrame() {
 			this.setSize(500, 500);
 			this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			this.setIconImage(Toolkit.getDefaultToolkit().createImage("assets/spaceicon.png"));
 			this.addWindowListener(new WindowAdapter() {
 				public void windowClosing(WindowEvent e) {
 					System.out.println("Closing Server");
@@ -342,6 +344,7 @@ public class Server implements Runnable {
 			start.setSize(100, 40);
 			start.setLocation(50, 250);
 			start.setFocusable(false);
+			this.setIconImage(Toolkit.getDefaultToolkit().createImage("assets/spaceicon.png"));
 			start.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {

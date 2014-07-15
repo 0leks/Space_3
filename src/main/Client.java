@@ -468,6 +468,7 @@ public class Client implements Runnable{
 			});
 			this.setSize(Toolkit.getDefaultToolkit().getScreenSize());
 			this.setUndecorated(true);
+			this.setIconImage(Toolkit.getDefaultToolkit().createImage("assets/spaceicon.png"));
 			draw = new JPanel() {
 				private static final long serialVersionUID = 1L;
 				@Override
@@ -695,6 +696,7 @@ public class Client implements Runnable{
 			this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			this.setSize(500, 500);
 			this.setTitle("Client");
+			this.setIconImage(Toolkit.getDefaultToolkit().createImage("assets/spaceicon.png"));
 			panel = new JPanel() {
 				private static final long serialVersionUID = 1L;
 				@Override
