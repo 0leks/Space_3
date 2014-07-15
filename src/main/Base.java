@@ -34,14 +34,14 @@ public class Base extends Thing {
 		y = sy;
 		width = sw;
 		height = sh;
-		health = 1000;
+		health = 10000;
 		HEALTH = 10;
 		DAMAGE = 1;
 		SPEED = 10;
-		SHOOTINGSPEED = 10;
+		SHOOTINGSPEED = 20;
 		RANGE = 200;
 		WIDTH = 20;
-		TIMETOSPAWN = 15;
+		TIMETOSPAWN = 30;
 		timetospawn = 0;
 		bounds = new Rectangle(x, y, width, height);
 		player = mine;
@@ -61,7 +61,7 @@ public class Base extends Thing {
 		if(upgrade.getCost()<=money) {
 			switch(upgrade.upgrade) {
 				case TIMETOSPAWN:
-					if(TIMETOSPAWN>5) {
+					if(TIMETOSPAWN>15) {
 						TIMETOSPAWN-=1;
 						upgrades[0]++;
 						money-=upgrade.getCost();
@@ -83,7 +83,7 @@ public class Base extends Thing {
 					money-=upgrade.getCost();
 					break;
 				case SHOOTINGSPEED:
-					if(SHOOTINGSPEED>5) {
+					if(SHOOTINGSPEED>10) {
 						SHOOTINGSPEED-=1;
 						upgrades[4]++;
 						money-=upgrade.getCost();

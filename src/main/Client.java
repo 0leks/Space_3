@@ -450,7 +450,6 @@ public class Client implements Runnable{
 			} catch (IOException e) {
 				connectframe.addText(e.getMessage()+" ("+ip+":"+port+")\n");
 				initializeServerErrorDraw();
-				updateServerErrorDraw();
 			}
 		}
 	}
@@ -479,6 +478,7 @@ public class Client implements Runnable{
 					g.setColor(Color.black);
 					g.fillRect(0, 0, getWidth(), getHeight());
 					if(SERVERERROR) {
+						updateServerErrorDraw();
 						g.setFont(new Font("Courier", Font.BOLD, 120));
 						for(int a=0; a<servererrordraw[0].length; a++) {
 							int col = servererrordraw[0][a];

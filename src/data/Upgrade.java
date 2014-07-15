@@ -20,21 +20,26 @@ public class Upgrade implements Serializable{
 		level = slevel;
 	}
 	public int getCost() {
+		int toreturn = 0;
 		switch(upgrade) {
 			case TIMETOSPAWN:
-				return level;
+				toreturn = level*level/4;
 			case HEALTH:
-				return 1+level/5;
+				toreturn = level/5;
 			case DAMAGE:
-				return level;
+				toreturn = level;
 			case SPEED:
-				return level;
+				toreturn = level;
 			case SHOOTINGSPEED:
-				return level;
+				toreturn = level*level/2;
 			case RANGE:
-				return 1+level/2;
+				toreturn = level/2;
 			default:
-				return 0;
+				toreturn = 0;
 		}
+		if(toreturn<=0) {
+			toreturn = 1;
+		}
+		return toreturn;
 	}
 }
