@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -72,7 +73,11 @@ public class Client implements Runnable{
 	private int money;
 	private int[][] servererrordraw;
 	private int direction = 1;
+	Image ship;
+	Image base;
 	public Client() {
+		ship = Toolkit.getDefaultToolkit().getImage("assets/ship.png");
+		base = Toolkit.getDefaultToolkit().getImage("assets/base.png");
 		buttons = new ArrayList<Button>();
 		upgradebuttons = new UpgradeButton[6];
 		target = new ArrayList<Rectangle>();
@@ -145,17 +150,20 @@ public class Client implements Runnable{
 		upgradebuttons = new UpgradeButton[6];
 		buttons.clear();
 		int startx = -30;
-		int dx = 110;
 		int starty = 10;
-		int dy = 0;
-		int width = 100;
+		int width = 110;
+		int dx = width+10;
 		int height = 40;
+		int dy = 0;
 		starty-=dy;
-		upgradebuttons[0] = new UpgradeButton(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.TIMETOSPAWN, 1)) {
+		upgradebuttons[0] = new UpgradeButton(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.TIMETOSPAWN, 1), Color.cyan, "Build Time") {
 			@Override
 			public void paint(Graphics g) {
-				g.setColor(Color.CYAN);
-				super.paint(g, "Build Time");
+				if(expanded) {
+					super.paintExpanded(g, mybase.getDeltaString(getUpgrade()));
+				} else {
+					super.paint(g);
+				}
 			}
 			@Override
 			public void click() {
@@ -164,11 +172,14 @@ public class Client implements Runnable{
 				}
 			}
 		};
-		upgradebuttons[1] = new UpgradeButton(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.HEALTH, 1)) {
+		upgradebuttons[1] = new UpgradeButton(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.HEALTH, 1), Color.red, "Health") {
 			@Override
 			public void paint(Graphics g) {
-				g.setColor(Color.red);
-				super.paint(g, "Health");
+				if(expanded) {
+					super.paintExpanded(g, mybase.getDeltaString(getUpgrade()));
+				} else {
+					super.paint(g);
+				}
 			}
 			@Override
 			public void click() {
@@ -177,11 +188,14 @@ public class Client implements Runnable{
 				}
 			}
 		};
-		upgradebuttons[2] = new UpgradeButton(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.DAMAGE, 1)) {
+		upgradebuttons[2] = new UpgradeButton(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.DAMAGE, 1), Color.blue, "Damage") {
 			@Override
 			public void paint(Graphics g) {
-				g.setColor(Color.blue);
-				super.paint(g, "Damage");
+				if(expanded) {
+					super.paintExpanded(g, mybase.getDeltaString(getUpgrade()));
+				} else {
+					super.paint(g);
+				}
 			}
 			@Override
 			public void click() {
@@ -190,11 +204,14 @@ public class Client implements Runnable{
 				}
 			}
 		};
-		upgradebuttons[3] = new UpgradeButton(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.SPEED, 1)) {
+		upgradebuttons[3] = new UpgradeButton(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.SPEED, 1), Color.ORANGE, "Speed") {
 			@Override
 			public void paint(Graphics g) {
-				g.setColor(Color.ORANGE);
-				super.paint(g, "Speed");
+				if(expanded) {
+					super.paintExpanded(g, mybase.getDeltaString(getUpgrade()));
+				} else {
+					super.paint(g);
+				}
 			}
 			@Override
 			public void click() {
@@ -203,11 +220,14 @@ public class Client implements Runnable{
 				}
 			}
 		};
-		upgradebuttons[4] = new UpgradeButton(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.SHOOTINGSPEED, 1)) {
+		upgradebuttons[4] = new UpgradeButton(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.SHOOTINGSPEED, 1), Color.YELLOW, "Reload") {
 			@Override
 			public void paint(Graphics g) {
-				g.setColor(Color.YELLOW);
-				super.paint(g, "Reload");
+				if(expanded) {
+					super.paintExpanded(g, mybase.getDeltaString(getUpgrade()));
+				} else {
+					super.paint(g);
+				}
 			}
 			@Override
 			public void click() {
@@ -216,11 +236,14 @@ public class Client implements Runnable{
 				}
 			}
 		};
-		upgradebuttons[5] = new UpgradeButton(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.RANGE, 1)) {
+		upgradebuttons[5] = new UpgradeButton(new Rectangle(startx+=dx, starty+=dy, width, height), new Upgrade(UpgradeType.RANGE, 1), Color.MAGENTA, "Range") {
 			@Override
 			public void paint(Graphics g) {
-				g.setColor(Color.MAGENTA);
-				super.paint(g, "Range");
+				if(expanded) {
+					super.paintExpanded(g, mybase.getDeltaString(getUpgrade()));
+				} else {
+					super.paint(g);
+				}
 			}
 			@Override
 			public void click() {
@@ -493,6 +516,7 @@ public class Client implements Runnable{
 						g.setColor(b.getPlayer().color);
 						Rectangle r = b.getBounds();
 						g.fillRect(r.x-lookingat.x, r.y-lookingat.y, r.width, r.height);
+						g.drawImage(base, r.x-lookingat.x, r.y-lookingat.y, r.width, r.height, null);
 						if(b.getDead()) {
 							g2d.setStroke(new BasicStroke(10));
 							g2d.setColor(Color.black);
@@ -514,6 +538,7 @@ public class Client implements Runnable{
 						g.setColor(b.getPlayer().color);
 						Rectangle r = b.getBounds();
 						g.fillRect(r.x-lookingat.x, r.y-lookingat.y, r.width, r.height);
+						g.drawImage(ship, r.x-lookingat.x, r.y-lookingat.y, r.width, r.height, null);
 						g.setColor(World.getOposite(b.getPlayer().color));
 						g.setFont(new Font("Courier", Font.BOLD, 14));
 						g.drawString(""+b.getHealth(), r.x-lookingat.x, r.y-lookingat.y+r.height);
@@ -546,10 +571,13 @@ public class Client implements Runnable{
 			draw.setBackground(Color.black);
 			this.add(draw, BorderLayout.CENTER);
 			this.addMouseMotionListener(new MouseMotionListener() {
+				boolean dragging;
 				@Override
 				public void mouseDragged(MouseEvent arg0) {
 					Point currentmouse = mouse.getLocation();
+					dragging = true;
 					mouseMoved(arg0);
+					dragging = false;
 					if(press!=null) {
 						press.bounds.x+=mouse.x-currentmouse.x;
 						press.bounds.y+=mouse.y-currentmouse.y;
@@ -571,6 +599,17 @@ public class Client implements Runnable{
 						camerady = 1;
 					} else {
 						camerady = 0;
+					}
+					if(!dragging) {
+						for(Button b : buttons) {
+							if(b instanceof UpgradeButton) {
+								if(b.bounds.contains(mouse)) {
+//									((UpgradeButton)b).mouseOver(true);
+								} else {
+//									((UpgradeButton)b).mouseOver(false);
+								}
+							}
+						}
 					}
 				}
 			});
@@ -675,6 +714,14 @@ public class Client implements Runnable{
 						Explosion e = explosions.get(a);
 						if(e.widen()) {
 							explosions.remove(a);
+						}
+					}
+					for(int a=0; a<upgradebuttons.length; a++) {
+						UpgradeButton b = upgradebuttons[a];
+						if(money>=b.getUpgrade().getCost()) {
+							b.color = Color.GREEN;
+						} else {
+							b.color = Color.red;
 						}
 					}
 					repaint();

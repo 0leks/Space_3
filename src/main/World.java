@@ -66,14 +66,10 @@ public class World{
 					if(s.laserReady()) {
 						Thing en = getClosestEnemy(s);
 						
-//						System.out.println("Closest Enemy is "+en.getID());
 						
 						if(en!=null && s.canShoot(en)) {
-//							System.out.println("Can shoot at "+en.getID());
 							s.shot();
-//							System.out.println("Shot at "+en.getID());
 							Laser l = new Laser(s.getID(), en.getID(), s.getCooldown()-4, s.getDamage());
-//							System.out.println("Laser "+l+" created");
 							l.source = s.source;
 							lasers.add(l);
 							server.sendToAll(l);
@@ -116,7 +112,7 @@ public class World{
 				long delta = System.currentTimeMillis()-currenttime;
 				averagetime = (long) ((((double)averagetime*numruns/100.0) + delta)/(numruns + 1)*100);
 				numruns++;
-				System.out.println("Time: "+delta+",  Average:"+(averagetime/100.0));
+				System.out.println("Num Ships: "+ships.size()+",   Time: "+delta+",   Average:"+(averagetime/100.0));
 				if(numruns>=100) {
 					numruns = 0;
 				}
@@ -168,20 +164,15 @@ public class World{
 		
 	}
 	public void removeShip(Ship s) {
-//		System.out.println("Removing Ship "+s.getID());
 		ships.remove(s);
 		sortedships.remove(s);
 		ShipData sd = s.getData();
 		sd.dead = true;
 		server.sendToAll(sd);
-		for(int a=0; a<ships.size(); a++) {
-			System.out.println(ships.get(a));
-		}
 		for(int a=lasers.size()-1; a>=0; a--) {
 			Laser l = lasers.get(a);
 			if(l.from==s.getID()) {
 				lasers.remove(a);
-//				System.out.println("Removing Laser");
 				RemoveLaser rl = new RemoveLaser(l);
 				server.sendToAll(rl);
 			}
@@ -241,13 +232,9 @@ public class World{
 		}
 		for(int a=0; a<bases.size(); a++) {
 			Base b = bases.get(a);
-//			System.out.println("Checking base "+b.getID());
 			if(!b.getDead() && !b.getPlayer().equals(s.getPlayer())) {
-//				System.out.println("Oposite Team");
 				int d = b.getDistanceFrom(s);
-//				System.out.println("Distance:"+d);
 				if(d<dist) {
-//					System.out.println("Target is closer");
 					dist = d;
 					en = b;
 				}
@@ -326,17 +313,6 @@ public class World{
 				ships.add(s);
 			}
 		}
-//		long now = System.currentTimeMillis();
-//		long took = now-cur;
-//		System.out.println("It took "+took+" milliseconds to send game data");
-//		for(int a=0; a<lasers.size(); a++) {
-//			
-//		}
-//		for(int a=0; a<ships.size(); a++) {
-//			server.sendToAll(ships.get(a));
-//		}
-//		gamedata.bases = null;
-//		gamedata.ships = null;
 	}
 	public void startGame() {
 		gametimer.start();

@@ -57,6 +57,32 @@ public class Base extends Thing {
 		}
 		return false;
 	}
+	public String getDeltaString(Upgrade upgrade) {
+		switch(upgrade.upgrade) {
+			case TIMETOSPAWN:
+				if(TIMETOSPAWN>15) {
+					return "Time "+TIMETOSPAWN+" -> "+(TIMETOSPAWN-1);
+				} else {
+					return "Maxed";
+				}
+			case HEALTH:
+				return "Health "+HEALTH+" -> "+(HEALTH+1);
+			case DAMAGE:
+				return "Damage "+DAMAGE+" -> "+(DAMAGE+1);
+			case SPEED:
+				return "Speed "+SPEED+" -> "+(SPEED+1);
+			case SHOOTINGSPEED:
+				if(SHOOTINGSPEED>10) {
+					return "Reload "+SHOOTINGSPEED+" -> "+(SHOOTINGSPEED-1);
+				} else {
+					return "Reload Maxed";
+				}
+			case RANGE:
+				return RANGE+" -> "+(RANGE+5);
+			default:
+				return "NULL";
+		}
+	}
 	public void upgrade(Upgrade upgrade) {
 		if(upgrade.getCost()<=money) {
 			switch(upgrade.upgrade) {
