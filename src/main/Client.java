@@ -516,7 +516,7 @@ public class Client implements Runnable{
 						g.setColor(b.getPlayer().color);
 						Rectangle r = b.getBounds();
 						g.fillRect(r.x-lookingat.x, r.y-lookingat.y, r.width, r.height);
-						g.drawImage(base, r.x-lookingat.x, r.y-lookingat.y, r.width, r.height, null);
+//						g.drawImage(base, r.x-lookingat.x, r.y-lookingat.y, r.width, r.height, null);
 						if(b.getDead()) {
 							g2d.setStroke(new BasicStroke(10));
 							g2d.setColor(Color.black);
@@ -538,7 +538,7 @@ public class Client implements Runnable{
 						g.setColor(b.getPlayer().color);
 						Rectangle r = b.getBounds();
 						g.fillRect(r.x-lookingat.x, r.y-lookingat.y, r.width, r.height);
-						g.drawImage(ship, r.x-lookingat.x, r.y-lookingat.y, r.width, r.height, null);
+//						g.drawImage(ship, r.x-lookingat.x, r.y-lookingat.y, r.width, r.height, null);
 						g.setColor(World.getOposite(b.getPlayer().color));
 						g.setFont(new Font("Courier", Font.BOLD, 14));
 						g.drawString(""+b.getHealth(), r.x-lookingat.x, r.y-lookingat.y+r.height);

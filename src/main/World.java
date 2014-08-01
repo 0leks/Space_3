@@ -77,6 +77,7 @@ public class World{
 					}
 //					ships.get(a).move();
 				}
+				long shiptime = System.currentTimeMillis()-currenttime;
 				for(int a=0; a<bases.size(); a++) {
 					Base b = bases.get(a);
 					b.tic();
@@ -91,6 +92,7 @@ public class World{
 						}
 					}
 				}
+				long basetime = System.currentTimeMillis()-currenttime-shiptime;
 				for(int a=lasers.size()-1; a>=0; a--) {
 					Laser l = lasers.get(a);
 					if(l.widen()) {
@@ -108,16 +110,34 @@ public class World{
 							lasers.remove(a);
 					}
 				}
+				long lasertime = System.currentTimeMillis()-currenttime - basetime;
 				sendGameData();
+				long sendtime = System.currentTimeMillis()-currenttime - lasertime;
 				long delta = System.currentTimeMillis()-currenttime;
 				averagetime = (long) ((((double)averagetime*numruns/100.0) + delta)/(numruns + 1)*100);
 				numruns++;
+				System.out.println("Shiptime:"+shiptime+",  Basetime:"+basetime+",  Lasertime:"+lasertime+",  Sendtime:"+sendtime);
 				System.out.println("Num Ships: "+ships.size()+",   Time: "+delta+",   Average:"+(averagetime/100.0));
 				if(numruns>=100) {
-					numruns = 0;
+					numruns = 50;
 				}
 			}
 		});
+	}
+	// TODO Replace Swing.Timer with own function that waits until send is complete before calling next tic.
+	// Currently, when number of ships gets high, it takes longer than World.GAMETIMER to send everything, so server starts lagging because cant keep up.
+	public void timer() {
+		while(true) {
+			long currenttime = System.currentTimeMillis();
+			//do all the stuff actionperformed in timer does.
+			//ships
+			//bases
+			//lasers
+			//send
+			while(System.currentTimeMillis()-currenttime<World.GAMETIMER) {
+				//waiting for at least set time to pass
+			}
+		}
 	}
 	public Rectangle getSpace(Ship spawn, Base base) {
 		int a=0;
