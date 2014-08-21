@@ -66,6 +66,16 @@ public class Server implements Runnable {
 		});
 		serverdata = new ServerData();
 	}
+	public void flush() {
+		for(int a=0; a<connections.size(); a++) {
+			Connection c = connections.get(a);
+			try {
+				c.out.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 	public ServerData getServerData() {
 		serverdata.players = worldframe.players.getText();
 		serverdata.radius = World.getRadius(selectedworldsize);

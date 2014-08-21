@@ -74,7 +74,7 @@ public class Connection implements Runnable{
 				if(ob instanceof Command) {
 					Command com = (Command)ob;
 					if(com.type==Command.MOVE) {
-						System.out.println("Received Command:"+com);
+//						System.out.println("Received Command:"+com);
 						server.playerMoveCommand(this.player, com.x, com.y);
 					}
 				}

@@ -24,11 +24,11 @@ public class World{
 	private transient GameData gamedata;
 	private transient Server server;
 	private transient Timer gametimer;
-	public static int GAMETIMER = 50;
+	public static int GAMETIMER = 150;
 	public static final int SMALL = 1;
 	public static final int MEDIUM = 2;
 	public static final int LARGE = 3;
-	
+	public static int flush;
 	private long averagetime;
 	private int numruns;
 	public World(int size, Server s) {
@@ -72,7 +72,12 @@ public class World{
 							Laser l = new Laser(s.getID(), en.getID(), s.getCooldown()-4, s.getDamage());
 							l.source = s.source;
 							lasers.add(l);
+							if(flush++>10) {
+								server.flush();
+								flush = 0;
+							}
 							server.sendToAll(l);
+							
 						}
 					}
 //					ships.get(a).move();
