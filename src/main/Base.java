@@ -23,12 +23,14 @@ public class Base extends Thing {
 	private int RANGE;
 	private int WIDTH;
 	private int money;
+	private int upgradesvalue;
 	private transient int[] upgrades;
 	public Base(Player mine, int sx, int sy, int sw, int sh) {
 		upgrades = new int[6];
 		for(int a=0; a<upgrades.length; a++) {
 			upgrades[a] = 1;
 		}
+		upgradesvalue = 0;
 		dead = false;
 		x = sx;
 		y = sy;
@@ -84,6 +86,7 @@ public class Base extends Thing {
 		}
 	}
 	public void upgrade(Upgrade upgrade) {
+		int mon = money;
 		if(upgrade.getCost()<=money) {
 			switch(upgrade.upgrade) {
 				case TIMETOSPAWN:
@@ -126,6 +129,7 @@ public class Base extends Thing {
 		} else {
 			System.out.println("Not enough money. Have:"+money+", need:"+upgrade.getCost());
 		}
+		this.upgradesvalue+= mon-money;
 	}
 	@Override
 	public int getDistanceFrom(Ship other) {
@@ -149,7 +153,7 @@ public class Base extends Thing {
 		return false;
 	}
 	public Ship getShip() {
-		Ship s = new Ship(this.getPlayer(), 0, 0, WIDTH, WIDTH, SPEED, SHOOTINGSPEED, RANGE, DAMAGE, HEALTH);
+		Ship s = new Ship(this.getPlayer(), 0, 0, WIDTH, WIDTH, SPEED, SHOOTINGSPEED, RANGE, DAMAGE, HEALTH, 1+upgradesvalue/100);
 		s.source = this;
 		return s;
 	}

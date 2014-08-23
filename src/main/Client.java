@@ -453,18 +453,21 @@ public class Client implements Runnable{
 						}
 					}
 				}
-				if(read instanceof Ship) {
-					Ship s = (Ship)read;
+				if(read instanceof DetailedShipData) {
+					DetailedShipData s = (DetailedShipData)read;
 					boolean added = false;
-					for(int a=0; a<ships.size(); a++) {
-						if(ships.get(a).getID()==s.getID()) {
-							ships.get(a).become(s);
-							added = true;
-							break;
-						}
-					}
+//					for(int a=0; a<ships.size(); a++) {
+//						if(ships.get(a).getID()==s.getID()) {
+//							ships.get(a).become(s);
+//							added = true;
+//							break;
+//						}
+//					}
 					if(!added) {
-						ships.add(s);
+//						System.out.println("Adding new ship");
+						Ship ship = new Ship(s.player, s.x, s.y, s.width, s.height, s.speed, s.COOLDOWN, s.range, s.damage, s.health, s.loot);
+						ship.id = s.id;
+						ships.add(ship);
 					}
 				}
 			} catch (ClassNotFoundException e) {
@@ -472,6 +475,7 @@ public class Client implements Runnable{
 				e.printStackTrace();
 			} catch (IOException e) {
 				connectframe.addText(e.getMessage()+" ("+ip+":"+port+")\n");
+				e.printStackTrace();
 				initializeServerErrorDraw();
 			}
 		}
@@ -670,7 +674,7 @@ public class Client implements Runnable{
 							}
 						}
 					} else if(e.getButton()==MouseEvent.BUTTON2) {
-						Ship s = new Ship(thisplayer, x, y, 20, 20, 10, 10, 2150, 10, 30);
+						Ship s = new Ship(thisplayer, x, y, 20, 20, 10, 10, 2000, 10, 100, 100);
 						send(s);
 					} else if(e.getButton()==MouseEvent.BUTTON3) {
 						boolean buttonpressed = false;
@@ -782,13 +786,13 @@ public class Client implements Runnable{
 			portbox.setSize(90, 30);
 			portbox.setLocation(280, 30);
 			panel.add(portbox);
-			usernamebox = new JTextField("Noob");
+			usernamebox = new JTextField("Noob"+(int)(Math.random()*100));
 			usernamebox.setSize(250, 30);
 			usernamebox.setLocation(20, 80);
 			panel.add(usernamebox);
-			redbox = new JTextField(""+50);
-			greenbox = new JTextField(""+100);
-			bluebox = new JTextField(""+150);
+			redbox = new JTextField(""+(int)((int)(Math.random()*20)*10+50));
+			greenbox = new JTextField(""+(int)((int)(Math.random()*20)*10+50));
+			bluebox = new JTextField(""+(int)((int)(Math.random()*20)*10+50));
 			redbox.addKeyListener(new KeyListener() {
 				@Override
 				public void keyPressed(KeyEvent e) {

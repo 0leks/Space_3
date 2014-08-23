@@ -25,16 +25,13 @@ public class World{
 	private transient Server server;
 	private transient Timer gametimer;
 	public static int GAMETIMER = 150;
+	public long sendtime;
 	public static final int SMALL = 1;
 	public static final int MEDIUM = 2;
 	public static final int LARGE = 3;
-	public static int flush;
-	private long averagetime;
-	private int numruns;
+//	public static int flush;
 	public World(int size, Server s) {
 		server = s;
-		numruns = 0;
-		averagetime = 0;
 		players = new ArrayList<Player>();
 		bases = new ArrayList<Base>();
 		ships = new ArrayList<Ship>();
@@ -42,108 +39,190 @@ public class World{
 		lasers = new ArrayList<Laser>();
 		setSize(size);
 		gamedata = new GameData();
-		gametimer= new Timer(World.GAMETIMER, new ActionListener() {
+		gametimer= new Timer(this.GAMETIMER, new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				long currenttime = System.currentTimeMillis();
-				for(int a=0; a<ships.size(); a++) {
-					Ship s = ships.get(a);
-					if(s==null) {
-						ships.remove(a--);
-						continue;
-					}
-					if(s.hasTarget()) {
-						Rectangle move = s.getMoveX();
-						if(!collides(s, move)) {
-							s.setPos(move);
+			public void actionPerformed(ActionEvent arg0) {
+				while(true) {
+					System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+					long currenttime = System.currentTimeMillis();
+					for(int a=0; a<ships.size(); a++) {
+						Ship s = ships.get(a);
+						if(s==null) {
+							ships.remove(a--);
+							continue;
 						}
-						move = s.getMoveY();
-						if(!collides(s, move)) {
-							s.setPos(move);
-						}
-					}
-					s.servertic();
-					if(s.laserReady()) {
-						Thing en = getClosestEnemy(s);
-						
-						
-						if(en!=null && s.canShoot(en)) {
-							s.shot();
-							Laser l = new Laser(s.getID(), en.getID(), s.getCooldown()-4, s.getDamage());
-							l.source = s.source;
-							lasers.add(l);
-							if(flush++>10) {
-								server.flush();
-								flush = 0;
+						if(s.hasTarget()) {
+							Rectangle move = s.getMoveX();
+							if(!collides(s, move)) {
+								s.setPos(move);
 							}
-							server.sendToAll(l);
+							move = s.getMoveY();
+							if(!collides(s, move)) {
+								s.setPos(move);
+							}
+						}
+						s.servertic();
+						if(s.laserReady()) {
+							Thing en = getClosestEnemy(s);
 							
+							
+							if(en!=null && s.canShoot(en)) {
+								s.shot();
+								Laser l = new Laser(s.getID(), en.getID(), s.getCooldown()-4, s.getDamage());
+								l.source = s.source;
+								lasers.add(l);
+//								if(flush++>10) {
+//									server.flush();
+//									flush = 0;
+//								}
+								server.sendToAll(l);
+								
+							}
+						}
+		//				ships.get(a).move();
+					}
+					long shiptime = System.currentTimeMillis()-currenttime;
+					for(int a=0; a<bases.size(); a++) {
+						Base b = bases.get(a);
+						b.tic();
+						if(b.ready()) {
+							Ship spawn = b.getShip();
+							Rectangle bounds = getSpace(spawn, b);
+							if(bounds==null) {
+							} else {
+								spawn.setPos(bounds);
+								addShip(spawn);
+								b.resetTimer();
+							}
 						}
 					}
-//					ships.get(a).move();
-				}
-				long shiptime = System.currentTimeMillis()-currenttime;
-				for(int a=0; a<bases.size(); a++) {
-					Base b = bases.get(a);
-					b.tic();
-					if(b.ready()) {
-						Ship spawn = b.getShip();
-						Rectangle bounds = getSpace(spawn, b);
-						if(bounds==null) {
-						} else {
-							spawn.setPos(bounds);
-							addShip(spawn);
-							b.resetTimer();
-						}
-					}
-				}
-				long basetime = System.currentTimeMillis()-currenttime-shiptime;
-				for(int a=lasers.size()-1; a>=0; a--) {
-					Laser l = lasers.get(a);
-					if(l.widen()) {
-						Thing en = getThing(l.to);
-						if(en!=null) {
-							if(en.takeDamage(l.damage)) {
-								removeThing(en);
-								Base b = l.source;
-								if(b!=null) {
-									b.addMoney(en.getLoot());
+					long basetime = System.currentTimeMillis()-currenttime-shiptime;
+					for(int a=lasers.size()-1; a>=0; a--) {
+						Laser l = lasers.get(a);
+						if(l.widen()) {
+							Thing en = getThing(l.to);
+							if(en!=null) {
+								if(en.takeDamage(l.damage)) {
+									removeThing(en);
+									Base b = l.source;
+									if(b!=null) {
+										b.addMoney(en.getLoot());
+									}
 								}
 							}
+							if(a<lasers.size())
+								lasers.remove(a);
 						}
-						if(a<lasers.size())
-							lasers.remove(a);
 					}
-				}
-				long lasertime = System.currentTimeMillis()-currenttime - basetime;
-				sendGameData();
-				long sendtime = System.currentTimeMillis()-currenttime - lasertime;
-				long delta = System.currentTimeMillis()-currenttime;
-				averagetime = (long) ((((double)averagetime*numruns/100.0) + delta)/(numruns + 1)*100);
-				numruns++;
-				System.out.println("Shiptime:"+shiptime+",  Basetime:"+basetime+",  Lasertime:"+lasertime+",  Sendtime:"+sendtime);
-				System.out.println("Num Ships: "+ships.size()+",   Time: "+delta+",   Average:"+(averagetime/100.0));
-				if(numruns>=100) {
-					numruns = 50;
+					long lasertime = System.currentTimeMillis()-currenttime - basetime;
+					sendGameData((int) (World.GAMETIMER-lasertime));
+					sendtime = System.currentTimeMillis()-currenttime - lasertime;
+					long delta = System.currentTimeMillis()-currenttime;
+					System.out.println("Shiptime:"+shiptime+",  Basetime:"+basetime+",  Lasertime:"+lasertime+",  Sendtime:"+sendtime);
+					System.out.println("Num Ships: "+ships.size()+",   Time: "+delta);
+					
+					while(System.currentTimeMillis()-currenttime<World.GAMETIMER) {
+						//waiting for at least set time to pass
+					}
 				}
 			}
 		});
 	}
-	// TODO Replace Swing.Timer with own function that waits until send is complete before calling next tic.
-	// Currently, when number of ships gets high, it takes longer than World.GAMETIMER to send everything, so server starts lagging because cant keep up.
-	public void timer() {
-		while(true) {
-			long currenttime = System.currentTimeMillis();
-			//do all the stuff actionperformed in timer does.
-			//ships
-			//bases
-			//lasers
-			//send
-			while(System.currentTimeMillis()-currenttime<World.GAMETIMER) {
-				//waiting for at least set time to pass
-			}
-		}
-	}
+//	public class Timer implements Runnable{
+//		private Thread mythread;
+//		public Timer() {
+//			mythread = new Thread(this);
+//		}
+//		public void start() {
+//			mythread.start();
+//		}
+//		@Override
+//		public void run() {
+//			while(true) {
+//				System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+//				long currenttime = System.currentTimeMillis();
+//				for(int a=0; a<ships.size(); a++) {
+//					Ship s = ships.get(a);
+//					if(s==null) {
+//						ships.remove(a--);
+//						continue;
+//					}
+//					if(s.hasTarget()) {
+//						Rectangle move = s.getMoveX();
+//						if(!collides(s, move)) {
+//							s.setPos(move);
+//						}
+//						move = s.getMoveY();
+//						if(!collides(s, move)) {
+//							s.setPos(move);
+//						}
+//					}
+//					s.servertic();
+//					if(s.laserReady()) {
+//						Thing en = getClosestEnemy(s);
+//						
+//						
+//						if(en!=null && s.canShoot(en)) {
+//							s.shot();
+//							Laser l = new Laser(s.getID(), en.getID(), s.getCooldown()-4, s.getDamage());
+//							l.source = s.source;
+//							lasers.add(l);
+////							if(flush++>10) {
+////								server.flush();
+////								flush = 0;
+////							}
+//							server.sendToAll(l);
+//							
+//						}
+//					}
+//	//				ships.get(a).move();
+//				}
+//				long shiptime = System.currentTimeMillis()-currenttime;
+//				for(int a=0; a<bases.size(); a++) {
+//					Base b = bases.get(a);
+//					b.tic();
+//					if(b.ready()) {
+//						Ship spawn = b.getShip();
+//						Rectangle bounds = getSpace(spawn, b);
+//						if(bounds==null) {
+//						} else {
+//							spawn.setPos(bounds);
+//							addShip(spawn);
+//							b.resetTimer();
+//						}
+//					}
+//				}
+//				long basetime = System.currentTimeMillis()-currenttime-shiptime;
+//				for(int a=lasers.size()-1; a>=0; a--) {
+//					Laser l = lasers.get(a);
+//					if(l.widen()) {
+//						Thing en = getThing(l.to);
+//						if(en!=null) {
+//							if(en.takeDamage(l.damage)) {
+//								removeThing(en);
+//								Base b = l.source;
+//								if(b!=null) {
+//									b.addMoney(en.getLoot());
+//								}
+//							}
+//						}
+//						if(a<lasers.size())
+//							lasers.remove(a);
+//					}
+//				}
+//				long lasertime = System.currentTimeMillis()-currenttime - basetime;
+//				sendGameData((int) (World.GAMETIMER-lasertime));
+//				sendtime = System.currentTimeMillis()-currenttime - lasertime;
+//				long delta = System.currentTimeMillis()-currenttime;
+//				System.out.println("Shiptime:"+shiptime+",  Basetime:"+basetime+",  Lasertime:"+lasertime+",  Sendtime:"+sendtime);
+//				System.out.println("Num Ships: "+ships.size()+",   Time: "+delta);
+//				
+//				while(System.currentTimeMillis()-currenttime<World.GAMETIMER) {
+//					//waiting for at least set time to pass
+//				}
+//			}
+//		}
+//	}
 	public Rectangle getSpace(Ship spawn, Base base) {
 		int a=0;
 		int b = 0;
@@ -321,22 +400,28 @@ public class World{
 		ships.add(s);
 		sortedships.add(s);
 	}
-	public void sendGameData() {
-//		long cur = System.currentTimeMillis();
+	public void sendGameData(int timeremaining) {
+		long cur = System.currentTimeMillis();
 		for(int a=0; a<bases.size(); a++) {
 			server.sendToAll(bases.get(a));
 			server.sendToPlayer(bases.get(a).getPlayer(), bases.get(a).getUpgrades());
 		}
 		if(ships.size()>0) {
-			for(int a=0; a<ships.size() && a<100 ; a++) {
+			int size = ships.size();
+			int a=0;
+			for(; a<ships.size() && timeremaining>0; a++) {
 				Ship s = ships.remove(0);
 				if(s.sent) {
 					server.sendToAll(s.getData());
 				} else {
-					server.sendToAll(s);
+					server.sendToAll(s.getDetailedData());
+					s.sent = true;
 				}
 				ships.add(s);
+				timeremaining-=(System.currentTimeMillis()-cur);
 			}
+			System.out.println("Timeremaining:"+timeremaining+",  sent: "+a+"/"+size);
+			
 		}
 	}
 	public void startGame() {

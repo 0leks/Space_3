@@ -4,6 +4,7 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.io.Serializable;
 
+import data.DetailedShipData;
 import data.ShipData;
 
 public class Ship extends Thing {
@@ -12,36 +13,38 @@ public class Ship extends Thing {
 	private int width, height;
 	private Player player;
 	private int speed;
-	private Point target;
-	private Rectangle bounds;
-	private ShipData data;
-	public boolean sent;
-	public int cooldown;
+	private transient Point target;
+	private transient Rectangle bounds;
+	private transient ShipData data;
+	private transient DetailedShipData detaileddata;
+	public transient boolean sent;
+	public transient int cooldown;
 	private final int COOLDOWN;
 	private int range;
 	private int damage;
 	private int health;
 	private int loot;
 	public transient Base source;
-	public Ship(Player mine, int sx, int sy, int sw, int sh, int sspeed, int scooldown, int srange, int sdamage, int shealth) {
+	public Ship(Player mine, int sx, int sy, int sw, int sh, int sspeed, int scooldown, int srange, int sdamage, int shealth, int sloot) {
 		health = shealth;
 		range = srange;
 		COOLDOWN = scooldown;
 		cooldown = 0;
-		loot = 1;
+		loot = sloot;
 		x = sx;
 		y = sy;
 		width = sw;
 		height = sh;
 		bounds = new Rectangle(x, y, width, height);
 		data = new ShipData();
+		detaileddata = new DetailedShipData();
 		sent = false;
 		player = mine;
 		speed = sspeed;
 		damage = sdamage;
 	}
 	public Ship create() {
-		return new Ship(player, this.getX(), this.getY(), this.getWidth(), this.getHeight(), this.getSpeed(), this.getCooldown(), this.getRange(), this.getDamage(), this.getHealth());
+		return new Ship(player, this.getX(), this.getY(), this.getWidth(), this.getHeight(), this.getSpeed(), this.getCooldown(), this.getRange(), this.getDamage(), this.getHealth(), this.getLoot());
 	}
 	public void become(Ship other) {
 		this.id = other.id;
@@ -96,6 +99,21 @@ public class Ship extends Thing {
 		cooldown--;
 //		move();
 	}
+	public DetailedShipData getDetailedData() {
+		detaileddata.COOLDOWN = COOLDOWN;
+		detaileddata.damage = damage;
+		detaileddata.health = health;
+		detaileddata.height = height;
+		detaileddata.loot = loot;
+		detaileddata.id = id;
+		detaileddata.player = player;
+		detaileddata.range = range;
+		detaileddata.speed = speed;
+		detaileddata.width = width;
+		detaileddata.x = x;
+		detaileddata.y = y;
+		return detaileddata;
+	}
 	public ShipData getData() {
 		data.x = x;
 		data.y = y;
@@ -111,7 +129,7 @@ public class Ship extends Thing {
 		return bounds;
 	}
 	public Ship duplicate() {
-		return new Ship(player, x, y, width, height, speed, COOLDOWN, range, damage, health);
+		return new Ship(player, x, y, width, height, speed, COOLDOWN, range, damage, health, loot);
 	}
 	public boolean hasTarget() {
 		return target!=null;
