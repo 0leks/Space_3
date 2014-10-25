@@ -492,7 +492,7 @@ public class Client implements Runnable{
 					System.exit(0);
 				}
 			});
-			this.setSize(Toolkit.getDefaultToolkit().getScreenSize());
+			this.setSize((int)Toolkit.getDefaultToolkit().getScreenSize().getWidth(), (int)Toolkit.getDefaultToolkit().getScreenSize().getHeight()-20);
 			this.setUndecorated(true);
 			this.setIconImage(Toolkit.getDefaultToolkit().createImage("assets/spaceicon.png"));
 			draw = new JPanel() {
